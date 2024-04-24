@@ -36,7 +36,10 @@ EQ (Igual): EQ operando1, operando2;
 NE (Diferente): NE operando1, operando2;
 LT (Menor que): LE operando1, operando2;
 LE (Menor ou igual): LE operando1, operando2;
-
+CTU (Contador Crescente): CTU operando;
+CTD (Contador Decrescente): CTD operando;
+TON (Temporizador para Ligar): TON operando;
+TOF (Temporizador para Desligar): TOF operando;
 */
 
 #include <stdio.h>
