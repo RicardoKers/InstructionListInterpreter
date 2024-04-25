@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>SimuladorIL</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/App.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/App.png</iconset>
+  </property>
   <property name="statusTip">
    <string>Kerschbaumer 2024</string>
   </property>
@@ -25,6 +29,11 @@
         <pointsize>10</pointsize>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="plainText">
+       <string>LD X1
+AND X2
+SET Y1</string>
       </property>
      </widget>
     </item>
@@ -97,8 +106,11 @@
      <string>Simular</string>
     </property>
     <addaction name="actionAvan_ar"/>
+    <addaction name="actionCiclo"/>
     <addaction name="actionRodar"/>
+    <addaction name="actionPausar"/>
     <addaction name="actionParar"/>
+    <addaction name="actionResetar_2"/>
    </widget>
    <addaction name="menuArquivo"/>
    <addaction name="menuSimular"/>
@@ -115,8 +127,11 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionAvan_ar"/>
+   <addaction name="actionCiclo"/>
    <addaction name="actionRodar"/>
+   <addaction name="actionPausar"/>
    <addaction name="actionParar"/>
+   <addaction name="actionResetar"/>
    <addaction name="separator"/>
   </widget>
   <action name="actionSair">
@@ -125,18 +140,69 @@
    </property>
   </action>
   <action name="actionAvan_ar">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/next.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/next.png</iconset>
+   </property>
    <property name="text">
     <string>Avançar</string>
    </property>
   </action>
   <action name="actionRodar">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/play.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/play.png</iconset>
+   </property>
    <property name="text">
     <string>Rodar</string>
    </property>
   </action>
   <action name="actionParar">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/stop.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/stop.png</iconset>
+   </property>
    <property name="text">
     <string>Parar</string>
+   </property>
+  </action>
+  <action name="actionResetar">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/reset.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/reset.png</iconset>
+   </property>
+   <property name="text">
+    <string>Resetar</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionPausar">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/pause.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/pause.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pausar</string>
+   </property>
+  </action>
+  <action name="actionResetar_2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/reset.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/reset.png</iconset>
+   </property>
+   <property name="text">
+    <string>Resetar</string>
+   </property>
+  </action>
+  <action name="actionCiclo">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/Cicle.png</normaloff>../../../../../../Projetos/SimuladorIL/Programas/SimuladorIL/Cicle.png</iconset>
+   </property>
+   <property name="text">
+    <string>Ciclo</string>
    </property>
   </action>
  </widget>

@@ -27,3 +27,5 @@ typedef struct stData {
 void atualiza_entradas();
 void atualiza_saidas();
 Data* inicializa();
+void rodaCiclo(char *programa);
+void rodaPasso(char *programa);

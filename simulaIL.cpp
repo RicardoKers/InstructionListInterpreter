@@ -500,6 +500,12 @@ void execute_instruction(Instruction instrucao)
     case LT_TOKEN:
         if(data.acumulador==1){
             if(verify_integer(instrucao.operands[0]) && verify_integer(instrucao.operands[1]))
+                data.acumulador=(get_value(instrucao.operands[0])<get_value(instrucao.operands[1]))?1:0;
+        }
+        break;
+    case LE_TOKEN:
+        if(data.acumulador==1){
+            if(verify_integer(instrucao.operands[0]) && verify_integer(instrucao.operands[1]))
                 data.acumulador=(get_value(instrucao.operands[0])<=get_value(instrucao.operands[1]))?1:0;
         }
         break;
@@ -546,6 +552,32 @@ void atualiza_entradas() // dependente da plataforma
 void atualiza_saidas() // dependente da plataforma
 {
 
+}
+
+int pos = 0;
+Instruction instrucao;
+
+void rodaPasso(char *programa)
+{
+    if(programa[pos] != '\0')
+    {
+        get_instruction(programa, &pos, &instrucao);
+        execute_instruction(instrucao);
+    }
+    else
+    {
+        pos = 0;
+    }
+}
+
+void rodaCiclo(char *programa)
+{    
+    while (programa[pos] != '\0')
+    {
+        get_instruction(programa, &pos, &instrucao);
+        execute_instruction(instrucao);
+    }
+    pos = 0;
 }
 
 

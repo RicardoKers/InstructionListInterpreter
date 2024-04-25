@@ -31,6 +31,10 @@ private slots:
 
     void timer1Event();
 
+    void on_actionRodar_triggered();
+
+    void on_actionParar_triggered();
+
 private:
     Ui::MainWindow *ui;
     QTimer *timer1;

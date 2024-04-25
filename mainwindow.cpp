@@ -81,6 +81,9 @@ void MainWindow::on_actionSair_triggered()
 
 void MainWindow::on_actionAvan_ar_triggered()
 {
+    QByteArray ba = ui->plainTextEdit->toPlainText().toLocal8Bit();
+    char *t = ba.data();
+    rodaPasso(t);
     char tmp[200];
     for (int i = 0; i < Max_Memorias; i++)
     {
@@ -194,5 +197,46 @@ void MainWindow::timer1Event()
         sprintf(tmp,"%d",MemoryData->ContValue[i]);
         ui->tableWidget->setItem(i,8,new QTableWidgetItem(tmp));
     }
+}
+
+
+void MainWindow::on_actionRodar_triggered()
+{
+    QByteArray ba = ui->plainTextEdit->toPlainText().toLocal8Bit();
+    char *t = ba.data();
+    rodaCiclo(t);
+    char tmp[200];
+    for (int i = 0; i < Max_Memorias; i++)
+    {
+        ui->tableWidget->removeRow(i);
+        ui->tableWidget->insertRow(i);
+        sprintf(tmp,"%d",i);
+        ui->tableWidget->setItem(i,0,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->Entradas[i]);
+        ui->tableWidget->setItem(i,1,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->Saidas[i]);
+        ui->tableWidget->setItem(i,2,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->Memorias[i]);
+        ui->tableWidget->setItem(i,3,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->Registradores[i]);
+        ui->tableWidget->setItem(i,4,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->TempPreset[i]);
+        ui->tableWidget->setItem(i,5,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->TempValue[i]);
+        ui->tableWidget->setItem(i,6,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->ContPreset[i]);
+        ui->tableWidget->setItem(i,7,new QTableWidgetItem(tmp));
+        sprintf(tmp,"%d",MemoryData->ContValue[i]);
+        ui->tableWidget->setItem(i,8,new QTableWidgetItem(tmp));
+    }
+
+    if(MemoryData->acumulador==0) ui->label->setText("Acumulador = 0");
+    else ui->label->setText("Acumulador = 1");
+}
+
+
+void MainWindow::on_actionParar_triggered()
+{
+
 }
 
