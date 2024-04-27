@@ -38,6 +38,9 @@ Operands format is as follows:
     16 bits for the operand address
 ==============================
 
+The first 2 bytes of the program are the size of the program in bytes.
+==============================
+
 The implemented instructions are as follows:
 LD (Load): LD source;
 LDN (Load Negated): LDN source;
@@ -88,7 +91,7 @@ TODO: Criate a stack to support the instructions that use it, and a ) instructio
 */
 
 #include "VM.h"
-
+/*
 #define InstLD 0
 #define InstLDN 1
 #define InstST 2
@@ -172,7 +175,7 @@ typedef struct stInstruction {
     uint8_t num_operands;
     Operand operands[3];
 } Instruction;
-
+*/
 /**
  * Reads an instruction from a buffer at a given position.
  * 
@@ -279,7 +282,7 @@ void setWordInAddress(uint8_t *memory, uint16_t address, int16_t value) {
  * @return The value of the double word.
  */
 uint32_t getDoubleWordFromAddress(uint8_t *memory, uint16_t address) {
-    return (memory[address] << 24) | (memory[address+1] << 16) | (memory[address+2] << 8) | memory[address+3];
+    return ((uint32_t)memory[address] << 24) | ((uint32_t)memory[address+1] << 16) | ((uint32_t)memory[address+2] << 8) | (uint32_t)memory[address+3];
 }
 
 /**
@@ -333,7 +336,7 @@ void setLongWordInAddress(uint8_t *memory, uint16_t address, uint64_t value) {
  */
 void executeInstruction(Instruction instr, Data *data)
 {
-    uint8_t temp;
+    uint8_t temp=0;
     switch (instr.opcode) {
         case InstLD:
             if(instr.operands[0].memorytype==X) {
@@ -518,6 +521,16 @@ void initializeMemory(Data *data) {
     for (uint16_t i = 0; i < OutputSize; i++) {
         data->Outputs[i] = 0;
     }
+}
+
+/**
+ * Gets the size of the program from a buffer.
+ * 
+ * @param buffer The buffer containing the program.
+ * @return The size of the program.
+ */
+uint16_t getProgramSize(uint8_t *buffer) {
+    return (buffer[0] << 8) | buffer[1];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -779,55 +792,60 @@ void printMemory(Data *data) {
     printf("\n---------------------------------------------------------------------------------------\n");
 }
 
+void printProgramInHEX(uint8_t *program, uint16_t size) {
+    printf("\n{");
+    for (uint16_t i = 0; i < size; i++) {
+        printf("0x%02X", program[i]);
+        if(i<size-1)
+            printf(",");
+    }
+    printf("}\n");
+}
+
 int main()
 {   
     uint8_t program[1000];
     Data data;
-    uint16_t bufPos = 0;
+    uint16_t bufPos = 2;
+    uint16_t programSize = 0;
     initializeMemory(&data);
     // Input test data
-    data.Inputs[0] = 1;
-    data.Inputs[1] = 1;
-    data.Inputs[2] = 1;
+    data.Inputs[0] = 0b00000000;
+ 
     // Test program
     // LD IX0.0
     Operand operand1 = {X, I, 0, 0};
     Operand operand2 = {X, I, 0, 0};
     Operand operand3 = {X, I, 0, 0};
     bufPos=encodeInstruction(program, bufPos, InstLD, 1, operand1, operand2, operand3);
-    // ST QX0.0
-    operand1 = {X, Q, 1, 2};
-    bufPos=encodeInstruction(program, bufPos, InstST, 1, operand1, operand2, operand3);
-    // LD IX1.0
-    operand1 = {X, I, 0, 1};
-    bufPos=encodeInstruction(program, bufPos, InstLD, 1, operand1, operand2, operand3);
-    // AND IX2.0
-    operand1 = {X, I, 0, 2};
+    // AND IX0.1
+    operand1 = {X, I, 1, 0};
     bufPos=encodeInstruction(program, bufPos, InstAND, 1, operand1, operand2, operand3);
-    // ST MX0.0
-    operand1 = {X, M, 0, 0};
-    bufPos=encodeInstruction(program, bufPos, InstST, 1, operand1, operand2, operand3);
-    // MOV MX0.0, MX1.7
-    operand1 = {X, M, 0, 0};
-    operand2 = {X, M, 7, 1};
-    bufPos=encodeInstruction(program, bufPos, InstMOV, 2, operand1, operand2, operand3);
-    // LD MX1.7
-    operand1 = {X, M, 7, 1};
-    bufPos=encodeInstruction(program, bufPos, InstLD, 1, operand1, operand2, operand3);
+    // ANDN IX0.2
+    operand1 = {X, I, 2, 0};
+    bufPos=encodeInstruction(program, bufPos, InstANDN, 1, operand1, operand2, operand3);
+    // OR IX0.3
+    operand1 = {X, I, 3, 0};
+    bufPos=encodeInstruction(program, bufPos, InstOR, 1, operand1, operand2, operand3);
     // ST QX0.0
     operand1 = {X, Q, 0, 0};
     bufPos=encodeInstruction(program, bufPos, InstST, 1, operand1, operand2, operand3);
-    
+
+    programSize = bufPos; // including the 2 bytes for the program size
+    program[0] = (uint8_t)(programSize >> 8) & 0xFF;
+    program[1] = (uint8_t)programSize & 0xFF;
+
     // Run the program
-    bufPos = 0;
+    bufPos = 2;
     printMemory(&data);
-    while(program[bufPos] != 0) {
+    while(bufPos < getProgramSize(program)) {
         Instruction instr = readInstruction(program, &bufPos);        
         printInstruction(instr);
         executeInstruction(instr, &data);
         printMemory(&data);
     }   
-    
+    printProgramInHEX(program,programSize);
+    printf("PSize = %d\n", programSize);
     getchar();
     return 0;
 }
