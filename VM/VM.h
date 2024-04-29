@@ -1,8 +1,10 @@
+#ifndef VM_H
+#define VM_H
+
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-
 
 #define InstLD 0
 #define InstLDN 1
@@ -50,10 +52,11 @@
 #define InstCTD 43
 #define InstTON 44
 #define InstTOF 45
+#define Instq 46
 
 // Memory definition
 #define MemorySize 10 // Size of the memory in bytes
-#define ImputSize 10 // Number of inputs in bytes
+#define ImputSize 10  // Number of inputs in bytes
 #define OutputSize 10 // Number of outputs in bytes
 
 #define X 0 // Bit
@@ -68,27 +71,33 @@
 #define K 3 // Constant from the program
 
 typedef struct stData {
-	// Memory variables
-	uint8_t Memories[MemorySize]; // Memories in bytes
-	uint8_t Inputs[ImputSize]; // Inputs in bytes
-	uint8_t Outputs[OutputSize]; // Outputs in bytes
-	uint8_t accumulator;
+  // Memory variables
+  uint8_t Memories[MemorySize]; // Memories in bytes
+  uint8_t Inputs[ImputSize];    // Inputs in bytes
+  uint8_t Outputs[OutputSize];  // Outputs in bytes
+  uint8_t accumulator;
 } Data;
 
 typedef struct stOperand {
-	uint8_t memorytype;
-	uint8_t registertype;
-	uint8_t bitNumber;
-	uint16_t address; // Or constant value if type is K
-}Operand;
+  uint8_t memorytype;
+  uint8_t registertype;
+  uint8_t bitNumber;
+  uint16_t address; // Or constant value if type is K
+} Operand;
 
 typedef struct stInstruction {
-	uint8_t opcode;
-	uint8_t num_operands;
-	Operand operands[3];
+  uint8_t opcode;
+  uint8_t num_operands;
+  Operand operands[3];
 } Instruction;
+
+
 
 void initializeMemory(Data *data);
 void executeInstruction(Instruction instr, Data *data);
 Instruction readInstruction(uint8_t *buffer, uint16_t *position);
 uint16_t getProgramSize(uint8_t *buffer);
+
+
+
+#endif
