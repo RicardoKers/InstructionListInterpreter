@@ -2,8 +2,7 @@
 #define TIMER_H
 
 #include <stdint.h>
-
-#define MAX_TEMPS 10 // Maximum timers available
+#include "VMparameters.h"
 
 extern uint32_t ElapsedTicks;
 

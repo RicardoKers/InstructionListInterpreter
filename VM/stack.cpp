@@ -9,7 +9,7 @@
 void initStackb(Stackb *s) { s->top = -1; }
 
 // Check if the stack is full
-uint8_t isFullb(Stackb *s) { return s->top == MAX_SIZE - 1; }
+uint8_t isFullb(Stackb *s) { return s->top == STACK_MAX_SIZE - 1; }
 
 // Check if the stack is empty
 uint8_t isEmptyb(Stackb *s) { return s->top == -1; }
@@ -47,7 +47,7 @@ uint8_t popb(Stackb *s, StackElementb *element) {
 void initStackw(Stackw *s) { s->top = -1; }
 
 // Check if the stack is full
-uint8_t isFullw(Stackw *s) { return s->top == MAX_SIZE - 1; }
+uint8_t isFullw(Stackw *s) { return s->top == STACK_MAX_SIZE - 1; }
 
 // Check if the stack is empty
 uint8_t isEmptyw(Stackw *s) { return s->top == -1; }

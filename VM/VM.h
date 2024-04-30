@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "VMparameters.h"
 
+// Instructions
 #define InstLD 0
 #define InstLDN 1
 #define InstST 2
@@ -54,10 +56,54 @@
 #define InstTOF 45
 #define Instq 46
 
-// Memory definition
-#define MemorySize 10 // Size of the memory in bytes
-#define ImputSize 10  // Number of inputs in bytes
-#define OutputSize 10 // Number of outputs in bytes
+// Number of operands
+#define NumOpLD 1
+#define NumOpLDN 1
+#define NumOpST 1
+#define NumOpSTN 1
+#define NumOpS 1
+#define NumOpR 1
+#define NumOpMOV 2
+#define NumOpMOVp 2
+#define NumOpAND 1
+#define NumOpANDp 1
+#define NumOpANDN 1
+#define NumOpANDNp 1
+#define NumOpOR 1
+#define NumOpORp 1
+#define NumOpORN 1
+#define NumOpORNp 1
+#define NumOpXOR 1
+#define NumOpXORp 1
+#define NumOpXORN 1
+#define NumOpXORNp 1
+#define NumOpNOT 0
+#define NumOpNOTp 0
+#define NumOpADD 3
+#define NumOpADDp 3
+#define NumOpSUB 3
+#define NumOpSUBp 3
+#define NumOpMUL 3
+#define NumOpMULp 3
+#define NumOpDIV 3
+#define NumOpDIVp 3
+#define NumOpGT 2
+#define NumOpGTp 2
+#define NumOpGE 2
+#define NumOpGEp 2
+#define NumOpEQ 2
+#define NumOpEQp 2
+#define NumOpNE 36
+#define NumOpNEp 2
+#define NumOpLT 2
+#define NumOpLTp 2
+#define NumOpLE 2
+#define NumOpLEp 2
+#define NumOpCTU 5 // TODO: Adjust
+#define NumOpCTD 5 // TODO: Adjust
+#define NumOpTON 5 // TODO: Adjust
+#define NumOpTOF 5 // TODO: Adjust
+#define NumOpq 0
 
 #define X 0 // Bit
 #define B 1 // Byte 8 bits
@@ -73,7 +119,7 @@
 typedef struct stData {
   // Memory variables
   uint8_t Memories[MemorySize]; // Memories in bytes
-  uint8_t Inputs[ImputSize];    // Inputs in bytes
+  uint8_t Inputs[InputSize];    // Inputs in bytes
   uint8_t Outputs[OutputSize];  // Outputs in bytes
   uint8_t accumulator;
 } Data;
@@ -91,13 +137,10 @@ typedef struct stInstruction {
   Operand operands[3];
 } Instruction;
 
-
-
+uint8_t getNumOp(uint8_t inst);
 void initializeMemory(Data *data);
 void executeInstruction(Instruction instr, Data *data);
 Instruction readInstruction(uint8_t *buffer, uint16_t *position);
 uint16_t getProgramSize(uint8_t *buffer);
-
-
 
 #endif

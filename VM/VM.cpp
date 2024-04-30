@@ -13,8 +13,7 @@ M memories;
 ==============================
 
 Instruction format is as follows:
-    6 bits for the instruction
-    2 bits for the number of operands
+    8 bits for the instruction
 ===============================
 
 Operands format is as follows:
@@ -100,6 +99,161 @@ StackElementb poppedElement;
 Stackb stackb;
 
 /**
+ * Gets the number of operands for an instruction.
+ *
+ * @param inst The instruction to get the number of operands for. *
+ */
+uint8_t getNumOp(uint8_t inst) {
+  switch (inst)
+  {
+  case InstLD:
+      return NumOpLD;
+    break;
+  case InstLDN:
+      return NumOpLDN;
+    break;
+  case InstST:
+      return NumOpST;
+    break;
+  case InstSTN:
+      return NumOpSTN;
+    break;
+  case InstS:
+      return NumOpS;
+    break;
+  case InstR:
+      return NumOpR;
+    break;
+  case InstMOV:
+      return NumOpMOV;
+    break;
+  case InstMOVp:
+      return NumOpMOVp;
+    break;
+  case InstAND:
+      return NumOpAND;
+    break;
+  case InstANDp:
+      return NumOpANDp;
+    break;
+  case InstANDN:
+      return NumOpANDN;
+    break;
+  case InstANDNp:
+      return NumOpANDNp;
+    break;
+  case InstOR:
+      return NumOpOR;
+    break;
+  case InstORp:
+      return NumOpORp;
+    break;
+  case InstORN:
+      return NumOpORN;
+    break;
+  case InstORNp:
+      return NumOpORNp;
+    break;
+  case InstXOR:
+      return NumOpXOR;
+    break;
+  case InstXORp:
+      return NumOpXORp;
+    break;
+  case InstXORN:
+      return NumOpXORN;
+    break;
+  case InstXORNp:
+      return NumOpXORNp;
+    break;
+  case InstNOT:
+      return NumOpNOT;
+    break;
+  case InstNOTp:
+      return NumOpNOTp;
+    break;
+  case InstADD:
+      return NumOpADD;
+    break;
+  case InstADDp:
+      return NumOpADDp;
+    break;
+  case InstSUB:
+      return NumOpSUB;
+    break;
+  case InstSUBp:
+      return NumOpSUBp;
+    break;
+  case InstMUL:
+      return NumOpMUL;
+    break;
+  case InstMULp:
+      return NumOpMULp;
+    break;
+  case InstDIV:
+      return NumOpDIV;
+    break;
+  case InstDIVp:
+      return NumOpDIVp;
+    break;
+  case InstGT:
+      return NumOpGT;
+    break;
+  case InstGTp:
+      return NumOpGTp;
+    break;
+  case InstGE:
+      return NumOpGE;
+    break;
+  case InstGEp:
+      return NumOpGEp;
+    break;
+  case InstEQ:
+      return NumOpEQ;
+    break;
+  case InstEQp:
+      return NumOpEQp;
+    break;
+  case InstNE:
+      return NumOpNE;
+    break;
+  case InstNEp:
+      return NumOpNEp;
+    break;
+  case InstLT:
+      return NumOpLT;
+    break;
+  case InstLTp:
+      return NumOpLTp;
+    break;
+  case InstLE:
+      return NumOpLE;
+    break;
+  case InstLEp:
+      return NumOpLEp;
+    break;
+  case InstCTU:
+      return NumOpCTU;
+    break;
+  case InstCTD:
+      return NumOpCTD;
+    break;
+  case InstTON:
+      return NumOpTON;
+    break;
+  case InstTOF:
+      return NumOpTOF;
+    break;
+  case Instq:
+      return NumOpq;
+  default:
+      return 0;
+    break;
+  }
+  return 0;
+}
+
+/**
  * Reads an instruction from a buffer at a given position.
  *
  * @param buffer The buffer containing the instructions.
@@ -109,8 +263,8 @@ Stackb stackb;
 Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
   Instruction instr;
   uint16_t pos = (*position);
-  instr.opcode = (buffer[pos] >> 2);
-  instr.num_operands = buffer[pos] & 0x03;
+  instr.opcode = buffer[pos];
+  instr.num_operands = getNumOp(instr.opcode);
   for (uint16_t i = 0; i < instr.num_operands; i++) {
     instr.operands[i].memorytype = buffer[pos + 1 + (i * 3)] >> 5;
     instr.operands[i].registertype = (buffer[pos + 1 + (i * 3)] >> 3) & 0x03;
@@ -679,7 +833,7 @@ void initializeMemory(Data *data) {
   for (uint16_t i = 0; i < MemorySize; i++) {
     data->Memories[i] = 0;
   }
-  for (uint16_t i = 0; i < ImputSize; i++) {
+  for (uint16_t i = 0; i < InputSize; i++) {
     data->Inputs[i] = 0;
   }
   for (uint16_t i = 0; i < OutputSize; i++) {

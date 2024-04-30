@@ -2,8 +2,9 @@
 #define STACK_H
 
 #include <stdint.h>
+#include "VMparameters.h"
 
-#define MAX_SIZE 10 // Maximum stack size
+
 
 /*
 Stack structure for boolean values(accumulator)
@@ -14,7 +15,7 @@ typedef struct {
 } StackElementb;
 
 typedef struct {
-  StackElementb elements[MAX_SIZE];
+  StackElementb elements[STACK_MAX_SIZE];
   int top;
 } Stackb;
 
@@ -28,7 +29,7 @@ typedef struct {
 } StackElementw;
 
 typedef struct {
-  StackElementw elements[MAX_SIZE];
+  StackElementw elements[STACK_MAX_SIZE];
   int top;
 } Stackw;
 
