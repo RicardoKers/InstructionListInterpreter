@@ -15,7 +15,7 @@ uint8_t isFullb(Stackb *s) { return s->top == STACK_MAX_SIZE - 1; }
 uint8_t isEmptyb(Stackb *s) { return s->top == -1; }
 
 // Push an element onto the stack
-uint8_t pushb(Stackb *s, char instruction, uint8_t value) {
+uint8_t pushb(Stackb *s, uint8_t instruction, uint8_t value) {
   if (isFullb(s)) {
     printf("Error: Stack overflow\n");
     return 0;
@@ -53,7 +53,7 @@ uint8_t isFullw(Stackw *s) { return s->top == STACK_MAX_SIZE - 1; }
 uint8_t isEmptyw(Stackw *s) { return s->top == -1; }
 
 // Push an element onto the stack
-uint8_t pushw(Stackw *s, char instruction, int16_t value) {
+uint8_t pushw(Stackw *s, uint8_t instruction, int16_t value) {
   if (isFullw(s)) {
     printf("Error: Stack overflow\n");
     return 0;

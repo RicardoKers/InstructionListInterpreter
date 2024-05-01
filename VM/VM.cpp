@@ -10,6 +10,7 @@ M memories;
     W word 16 bits
     D double word 32 bits
     L long word 64 bits
+    R real word 32 bits (float point)
 ==============================
 
 Instruction format is as follows:
@@ -24,7 +25,8 @@ Operands format is as follows:
             2: W word 16 bits
             3: D double word 32 bits
             4: L long word 64 bits
-            5..7: Reserved
+            5: R real word 32 bits (float point)
+            6..7: Reserved
 
         2 bits for the Register type
             0: I input
