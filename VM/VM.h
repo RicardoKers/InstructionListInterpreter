@@ -105,17 +105,29 @@
 #define NumOpTOF 5 // TODO: Adjust
 #define NumOpq 0
 
+// Memory types
 #define X 0 // Bit
 #define B 1 // Byte 8 bits
 #define W 2 // Word 16 bits
 #define D 3 // Double word 32 bits
 #define L 4 // Long word 64 bits
+#define R 5 // Real (float) 32 bits
 
+// Register types
 #define I 0 // Input
 #define Q 1 // Output
 #define M 2 // Memory
 #define K 3 // Constant from the program
 
+// Error codes
+#define noError 0 // No error
+#define warning 1 // Warning, the execution continues
+#define criticalError 2 // Critical error, the execution stops
+
+// Isntruction definition
+#define MaxOpers 6
+
+// Data structure
 typedef struct stData {
   // Memory variables
   uint8_t Memories[MemorySize]; // Memories in bytes
@@ -134,13 +146,16 @@ typedef struct stOperand {
 typedef struct stInstruction {
   uint8_t opcode;
   uint8_t num_operands;
-  Operand operands[3];
+  Operand operands[MaxOpers];
 } Instruction;
 
 uint8_t getNumOp(uint8_t inst);
 void initializeMemory(Data *data);
-void executeInstruction(Instruction instr, Data *data);
+void executeInstruction(uint8_t *buffer, Instruction instr, Data *data);
 Instruction readInstruction(uint8_t *buffer, uint16_t *position);
 uint16_t getProgramSize(uint8_t *buffer);
+uint8_t verifyProgramIntegrity(uint8_t *buffer);
+int8_t operandValueToInt8(Operand *oper, uint8_t *program, Data *data);
+int16_t operandValueToInt16(Operand *oper, uint8_t *program, Data *data);
 
 #endif

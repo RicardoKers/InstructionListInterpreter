@@ -18,32 +18,54 @@
  * @return The new position in the buffer after encoding the instruction.
  */
 uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
-                           Operand operand0, Operand operand1, Operand operand2) {
+                           Operand operand[], uint64_t Kn[]) {
   buffer[bufPos] = opperation;
   uint8_t num_operands = getNumOp(opperation);
   bufPos += 1;
-  if (num_operands > 0) {
-    buffer[bufPos] = operand0.memorytype << 5 | operand0.registertype << 3 |
-                     operand0.bitNumber;
-    buffer[bufPos + 1] = (uint8_t)(operand0.address >> 8) & 0xFF;
-    buffer[bufPos + 2] = (uint8_t)operand0.address & 0xFF;
-    bufPos += 3;
+  for(int i=0; i < num_operands; i++) {
+    buffer[bufPos] = operand[i].memorytype << 5 | operand[i].registertype << 3 |
+                     operand[i].bitNumber;
+    if(operand[i].registertype != K) {
+      buffer[bufPos + 1] = (uint8_t)(operand[i].address >> 8) & 0xFF;
+      buffer[bufPos + 2] = (uint8_t)operand[i].address & 0xFF;
+      bufPos += 3;
+    } else {
+      if(operand[i].memorytype == X) {
+        buffer[bufPos + 1] = (uint8_t)Kn[i] & 0xFF;
+        bufPos += 2;
+      } else if(operand[i].memorytype == B) {
+        buffer[bufPos + 1] = (uint8_t)Kn[i] & 0xFF;
+        bufPos += 2;
+      } else if(operand[i].memorytype == W) {
+        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 8) & 0xFF;
+        buffer[bufPos + 2] = (uint8_t)Kn[i] & 0xFF;
+        bufPos += 3;
+      } else if(operand[i].memorytype == D) {
+        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 24) & 0xFF;
+        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 16) & 0xFF;
+        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 8) & 0xFF;
+        buffer[bufPos + 4] = (uint8_t)Kn[i] & 0xFF;
+        bufPos += 5;
+      } else if(operand[i].memorytype == L) {
+        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 56) & 0xFF;
+        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 48) & 0xFF;
+        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 40) & 0xFF;
+        buffer[bufPos + 4] = (uint8_t)(Kn[i] >> 32) & 0xFF;
+        buffer[bufPos + 5] = (uint8_t)(Kn[i] >> 24) & 0xFF;
+        buffer[bufPos + 6] = (uint8_t)(Kn[i] >> 16) & 0xFF;
+        buffer[bufPos + 7] = (uint8_t)(Kn[i] >> 8) & 0xFF;
+        buffer[bufPos + 8] = (uint8_t)Kn[i] & 0xFF;
+        bufPos += 9;
+      } else if(operand[i].memorytype == R) {
+        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 24) & 0xFF;
+        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 16) & 0xFF;
+        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 8) & 0xFF;
+        buffer[bufPos + 4] = (uint8_t)Kn[i] & 0xFF;
+        bufPos += 5;
+      }
+    }
   }
-  if (num_operands > 1) {
-    buffer[bufPos] = operand1.memorytype << 5 | operand1.registertype << 3 |
-                     operand1.bitNumber;
-    buffer[bufPos + 1] = (uint8_t)(operand1.address >> 8) & 0xFF;
-    buffer[bufPos + 2] = (uint8_t)operand1.address & 0xFF;
-    bufPos += 3;
-  }
-  if (num_operands > 2) {
-    buffer[bufPos] = operand2.memorytype << 5 | operand2.registertype << 3 |
-                     operand2.bitNumber;
-    buffer[bufPos + 1] = (uint8_t)(operand2.address >> 8) & 0xFF;
-    buffer[bufPos + 2] = (uint8_t)operand2.address & 0xFF;
-    bufPos += 3;
-  }
-  //TODO: Add support for more than 3 operands
+  
   buffer[bufPos] = 0;
   return bufPos;
 }
@@ -255,19 +277,32 @@ void printMemory(Data *data) {
   }
   printf("\nI:\t");
   for (uint16_t i = 0; i < InputSize; i++) {
-    printf("%d\t", data->Inputs[i]);
+    printf("%X\t", data->Inputs[i]);
   }
   printf("\nM:\t");
   for (uint16_t i = 0; i < MemorySize; i++) {
-    printf("%d\t", data->Memories[i]);
+    printf("%X\t", data->Memories[i]);
   }
   printf("\n0:\t");
   for (uint16_t i = 0; i < OutputSize; i++) {
-    printf("%d\t", data->Outputs[i]);
+    printf("%X\t", data->Outputs[i]);
   }
   printf("\nAccumulator = %d", data->accumulator);
   printf("\n-------------------------------------------------------------------"
          "--------------------\n");
+}
+
+// append the sum of all bytes of the program to the end of the program in 32 bits format
+void encodeProgramCS(uint8_t *program) {
+  uint16_t size = getProgramSize(program);
+  uint32_t sum = 0;
+  for (uint16_t i = 0; i < size; i++) {
+    sum += program[i];
+  }
+  program[size] = (uint8_t)(sum >> 24) & 0xFF;
+  program[size + 1] = (uint8_t)(sum >> 16) & 0xFF;
+  program[size + 2] = (uint8_t)(sum >> 8) & 0xFF;
+  program[size + 3] = (uint8_t)sum & 0xFF;
 }
 
 void printProgramInHEX(uint8_t *program, uint16_t size) {
@@ -292,50 +327,90 @@ int main() {
   initializeMemory(&data);
   // Input test data
   data.Inputs[0] = 0b00010111;
-
+  data.Inputs[1] = 0b00000000;
+  data.Inputs[2] = 0b00000001;
   // Test program
   // LD IX0.0
-  Operand operand1 = {X, I, 0, 0};
-  Operand operand2 = {X, I, 0, 0};
-  Operand operand3 = {X, I, 0, 0};
-  bufPos = encodeInstruction(program, bufPos, InstLD, operand1, operand2, operand3);
+  Operand operand[10];
+  operand[0] = {X, I, 1, 0};
+  operand[1] = {X, I, 0, 0};
+  operand[2] = {X, I, 0, 0};
+  uint64_t Kn[10];
+  Kn[0] = 0x0000000000000000;
+  Kn[1] = 0x0000000000000000;
+  Kn[2] = 0x0000000000000000;
+  
+  bufPos = encodeInstruction(program, bufPos, InstLD, operand, Kn);
   // AND IX0.1
-  operand1 = {X, I, 1, 0};
-  bufPos = encodeInstruction(program, bufPos, InstAND, operand1, operand2, operand3);
+  operand[0] = {X, I, 1, 0};
+  bufPos = encodeInstruction(program, bufPos, InstAND, operand, Kn);
   // ANDN IX0.2
-  operand1 = {X, I, 2, 0};
-  bufPos = encodeInstruction(program, bufPos, InstANDN, operand1, operand2, operand3);
+  operand[0] = {X, I, 2, 0};
+  bufPos = encodeInstruction(program, bufPos, InstANDN, operand, Kn);
   // OR IX0.3
-  operand1 = {X, I, 3, 0};
-  bufPos = encodeInstruction(program, bufPos, InstOR, operand1, operand2, operand3);
+  operand[0] = {X, I, 3, 0};
+  bufPos = encodeInstruction(program, bufPos, InstOR, operand, Kn);
   // ST QX0.0
-  operand1 = {X, Q, 0, 0};
-  bufPos = encodeInstruction(program, bufPos, InstST, operand1, operand2, operand3);
+  operand[0] = {X, Q, 0, 0};
+  bufPos = encodeInstruction(program, bufPos, InstST, operand, Kn);
   // AND( IX0.3
-  operand1 = {X, I, 3, 0};
-  bufPos = encodeInstruction(program, bufPos, InstANDp, operand1, operand2, operand3);
+  operand[0] = {X, I, 3, 0};
+  bufPos = encodeInstruction(program, bufPos, InstANDp, operand, Kn);
   // OR IX0.4
-  operand1 = {X, I, 4, 0};
-  bufPos = encodeInstruction(program, bufPos, InstOR, operand1, operand2, operand3);
+  operand[0] = {X, I, 4, 0};
+  bufPos = encodeInstruction(program, bufPos, InstOR, operand, Kn);
   // )
-  bufPos = encodeInstruction(program, bufPos, Instq, operand1, operand2, operand3);
+  bufPos = encodeInstruction(program, bufPos, Instq, operand, Kn);
+  // LD IX0.0
+  operand[0] = {X, I, 0, 0};
+  bufPos = encodeInstruction(program, bufPos, InstLD, operand, Kn);
+  // mov IX2.0 MX0.0
+  operand[0] = {X, K, 0, 0};
+  operand[1] = {X, M, 0, 0};
+  Kn[0] = 0x0000000000000001;
+  bufPos = encodeInstruction(program, bufPos, InstMOV, operand, Kn);
 
   programSize = bufPos; // including the 2 bytes for the program size
   program[0] = (uint8_t)(programSize >> 8) & 0xFF;
   program[1] = (uint8_t)programSize & 0xFF;
 
+  encodeProgramCS(program);
+
   // Run the program
+  if(verifyProgramIntegrity(program) != noError) {
+    printf("Program integrity error\n");
+    return 1;
+  }
   bufPos = 2;
   printMemory(&data);
-  while (bufPos < getProgramSize(program)) {
+  programSize = getProgramSize(program);
+  while (bufPos < programSize) {
     Instruction instr = readInstruction(program, &bufPos);
     printInstruction(instr);
-    executeInstruction(instr, &data);
+    executeInstruction(program, instr, &data);
     printMemory(&data);
   }
-  printProgramInHEX(program, programSize);
-  printf("PSize = %d\n", programSize);
-  getchar();
+  printProgramInHEX(program, programSize+4);
+  printf("Size = %d\n", programSize);
+  /*
+  // value contersion test
+  bufPos=0;
+ 
+
+  data.Inputs[2]= 0x3f;
+  data.Inputs[3]= 0x8c;
+  data.Inputs[4]= 0xcc;
+  data.Inputs[5]= 0xcd;
+  data.Inputs[6]= 0x01;
+  data.Inputs[7]= 0x01;
+  data.Inputs[8]= 0x01;
+  data.Inputs[9]= 0x01;
+
+  operand1 = {W, I, 0, 2}; //  memorytype; registertype; bitNumber; address;
+
+  printf("Value %d\n",operandValueToInt16(&operand1, program, &data));
+  */
+  //getchar();
 
   return 0;
 }

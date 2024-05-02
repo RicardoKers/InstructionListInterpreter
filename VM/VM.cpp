@@ -267,15 +267,24 @@ Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
   uint16_t pos = (*position);
   instr.opcode = buffer[pos];
   instr.num_operands = getNumOp(instr.opcode);
+  pos++;
   for (uint16_t i = 0; i < instr.num_operands; i++) {
-    instr.operands[i].memorytype = buffer[pos + 1 + (i * 3)] >> 5;
-    instr.operands[i].registertype = (buffer[pos + 1 + (i * 3)] >> 3) & 0x03;
-    instr.operands[i].bitNumber = buffer[pos + 1 + (i * 3)] & 0x07;
-    instr.operands[i].address =
-        (buffer[pos + 2 + (i * 3)] << 8) | buffer[pos + 3 + (i * 3)];
-    *position += 3;
+    instr.operands[i].memorytype = buffer[pos] >> 5;
+    instr.operands[i].registertype = (buffer[pos] >> 3) & 0x03;
+    instr.operands[i].bitNumber = buffer[pos] & 0x07;
+    pos++;
+    if(instr.operands[i].registertype != K)
+    {
+      instr.operands[i].address = (buffer[pos] << 8) | buffer[pos + 1];
+      pos += 2;
+    }
+    else
+    {
+      instr.operands[i].address = pos;
+      pos += 2;
+    }
   }
-  *position += 1;
+  *position = pos;
   return instr;
 }
 
@@ -305,6 +314,8 @@ uint8_t setBit(uint8_t byte, uint8_t bitNumber, uint8_t value) {
     return byte | (uint8_t)(1 << bitNumber);
   }
 }
+
+
 
 /**
  * Gets a bit from a memory address.
@@ -419,13 +430,249 @@ void setLongWordInAddress(uint8_t *memory, uint16_t address, uint64_t value) {
 }
 
 /**
+ * Gets a int8_t from a operand.
+ * 
+ * @param oper The operand to get the value from.
+ * @param program The program buffer.
+ * @param data The data structure containing the memory and register values.
+*/
+int8_t operandValueToInt8(Operand *oper, uint8_t *program, Data *data)
+{
+  uint32_t temp;
+  float f;
+  uint8_t *buffer = NULL;
+  if(oper->registertype == I)
+  {
+    buffer = data->Inputs;
+  }
+   if(oper->registertype == K)
+  {
+    buffer = program;
+  }
+  if(oper->registertype == M)
+  {
+    buffer = data->Memories;
+  }
+  if(oper->registertype == Q)
+  {
+    buffer = data->Outputs;
+  }
+
+  switch (oper->memorytype)
+  {
+  case X:
+      return (int8_t)getBitFormAddress(buffer, oper->address, oper->bitNumber);
+    break;
+  case B:
+      return (int8_t)buffer[oper->address];
+    break;
+  case W:
+      return (int8_t)(getWordFromAddress(buffer, oper->address)>>8);
+    break;
+  case D:
+      return (int8_t)(getDoubleWordFromAddress(buffer, oper->address)>>24);
+    break;
+  case L:
+      return (int8_t)(getLongWordFromAddress(buffer, oper->address)>>56);
+    break;
+  case R:
+      temp = getDoubleWordFromAddress(buffer, oper->address);
+      f = *(float *)&temp;
+      return (int8_t)f;
+    break;
+  default:
+      return 0;
+    break;
+  }
+  return 0;
+}
+
+/**
+ * Gets a int16_t from a operand.
+ * 
+ * @param oper The operand to get the value from.
+ * @param program The program buffer.
+ * @param data The data structure containing the memory and register values.
+*/
+int16_t operandValueToInt16(Operand *oper, uint8_t *program, Data *data)
+{
+  uint32_t temp;
+  float f;
+  uint8_t *buffer = NULL;
+  if(oper->registertype == I)
+  {
+    buffer = data->Inputs;
+  }
+   if(oper->registertype == K)
+  {
+    buffer = program;
+  }
+  if(oper->registertype == M)
+  {
+    buffer = data->Memories;
+  }
+  if(oper->registertype == Q)
+  {
+    buffer = data->Outputs;
+  }
+
+  switch (oper->memorytype)
+  {
+  case X:
+      return (int16_t)getBitFormAddress(buffer, oper->address, oper->bitNumber);
+    break;
+  case B:
+      return (int16_t)((int8_t)buffer[oper->address]);
+    break;
+  case W:
+      return (int16_t)getWordFromAddress(buffer, oper->address);
+    break;
+  case D:
+      return (int16_t)(getDoubleWordFromAddress(buffer, oper->address)>>16);
+    break;
+  case L:
+      return (int16_t)(getLongWordFromAddress(buffer, oper->address)>>48);
+    break;
+  case R:
+      temp = getDoubleWordFromAddress(buffer, oper->address);
+      f = *(float *)&temp;
+      return (int16_t)f;
+    break;
+  default:
+      return 0;
+    break;
+  }
+  return 0;
+}
+
+/**
+ * Gets a int32_t from a operand.
+ * 
+ * @param oper The operand to get the value from.
+ * @param program The program buffer.
+ * @param data The data structure containing the memory and register values.
+*/
+int32_t operandValueToInt32(Operand *oper, uint8_t *program, Data *data)
+{
+  uint32_t temp;
+  float f;
+  uint8_t *buffer = NULL;
+  if(oper->registertype == I)
+  {
+    buffer = data->Inputs;
+  }
+   if(oper->registertype == K)
+  {
+    buffer = program;
+  }
+  if(oper->registertype == M)
+  {
+    buffer = data->Memories;
+  }
+  if(oper->registertype == Q)
+  {
+    buffer = data->Outputs;
+  }
+
+  switch (oper->memorytype)
+  {
+  case X:
+      return (int32_t)getBitFormAddress(buffer, oper->address, oper->bitNumber);
+    break;
+  case B:
+      return (int32_t)((int8_t)buffer[oper->address]);
+    break;
+  case W:
+      return (int32_t)(int16_t)getWordFromAddress(buffer, oper->address);
+    break;
+  case D:
+      return (int32_t)getDoubleWordFromAddress(buffer, oper->address);
+    break;
+  case L:
+      return (int32_t)(getLongWordFromAddress(buffer, oper->address)>>32);
+    break;
+  case R:
+      temp = getDoubleWordFromAddress(buffer, oper->address);
+      f = *(float *)&temp;
+      return (int32_t)f;
+    break;
+  default:
+      return 0;
+    break;
+  }
+  return 0;
+}
+
+/**
+ * Gets a int64_t from a operand.
+ * 
+ * @param oper The operand to get the value from.
+ * @param program The program buffer.
+ * @param data The data structure containing the memory and register values.
+*/
+int64_t operandValueToInt64(Operand *oper, uint8_t *program, Data *data)
+{
+  uint32_t temp;
+  float f;
+  uint8_t *buffer = NULL;
+  if(oper->registertype == I)
+  {
+    buffer = data->Inputs;
+  }
+   if(oper->registertype == K)
+  {
+    buffer = program;
+  }
+  if(oper->registertype == M)
+  {
+    buffer = data->Memories;
+  }
+  if(oper->registertype == Q)
+  {
+    buffer = data->Outputs;
+  }
+
+  switch (oper->memorytype)
+  {
+  case X:
+      return (int64_t)getBitFormAddress(buffer, oper->address, oper->bitNumber);
+    break;
+  case B:
+      return (int64_t)((int8_t)buffer[oper->address]);
+    break;
+  case W:
+      return (int64_t)(int16_t)getWordFromAddress(buffer, oper->address);
+    break;
+  case D:
+      return (int64_t)(int32_t)getDoubleWordFromAddress(buffer, oper->address);
+    break;
+  case L:
+      return (int64_t)getLongWordFromAddress(buffer, oper->address);
+    break;
+  case R:
+      temp = getDoubleWordFromAddress(buffer, oper->address);
+      f = *(float *)&temp;
+      return (int64_t)f;
+    break;
+  default:
+      return 0;
+    break;
+  }
+  return 0;
+}
+
+/**
  * Executes an instruction.
  *
  * @param instr The instruction to execute.
  * @param data The data structure containing the memory and register values.
  */
-void executeInstruction(Instruction instr, Data *data) {
-  uint8_t temp = 0;
+void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
+  int8_t temp8 = 0;
+  int16_t temp16 = 0;
+  int32_t temp32 = 0;
+  int64_t temp64 = 0;
+  float tempf = 0;
   switch (instr.opcode) {
   case InstLD:
     if (instr.operands[0].memorytype == X) {
@@ -513,26 +760,56 @@ void executeInstruction(Instruction instr, Data *data) {
     break;
   case InstMOV:
     if (data->accumulator == 1) {
-      if (instr.operands[0].memorytype == X) {
-        if (instr.operands[0].registertype == I)
-          temp = getBitFormAddress(data->Inputs, instr.operands[0].address,
-                                   instr.operands[0].bitNumber);
-        else if (instr.operands[0].registertype == Q)
-          temp = getBitFormAddress(data->Outputs, instr.operands[0].address,
-                                   instr.operands[0].bitNumber);
-        else if (instr.operands[0].registertype == M)
-          temp = getBitFormAddress(data->Memories, instr.operands[0].address,
-                                   instr.operands[0].bitNumber);
-      }
       if (instr.operands[1].memorytype == X) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
         if (instr.operands[1].registertype == Q)
           setBitInAddress(data->Outputs, instr.operands[1].address,
-                          instr.operands[1].bitNumber, temp);
+                          instr.operands[1].bitNumber, temp8);
         else if (instr.operands[1].registertype == M)
           setBitInAddress(data->Memories, instr.operands[1].address,
-                          instr.operands[1].bitNumber, temp);
+                          instr.operands[1].bitNumber, temp8);
       }
-      // TODO: add move for other types of memory
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        if (instr.operands[1].registertype == Q)
+          data->Outputs[instr.operands[1].address] = (uint8_t)temp8;
+        else if (instr.operands[1].registertype == M)
+          data->Memories[instr.operands[1].address] = (uint8_t)temp8;
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        if (instr.operands[1].registertype == Q)
+          setWordInAddress(data->Outputs, instr.operands[1].address, temp16);
+        else if (instr.operands[1].registertype == M)
+          setWordInAddress(data->Memories, instr.operands[1].address, temp16);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        if (instr.operands[1].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[1].address,
+                                 temp32);
+        else if (instr.operands[1].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[1].address,
+                                 temp32);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        if (instr.operands[1].registertype == Q)
+          setLongWordInAddress(data->Outputs, instr.operands[1].address,
+                               temp64);
+        else if (instr.operands[1].registertype == M)
+          setLongWordInAddress(data->Memories, instr.operands[1].address,
+                               temp64);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToInt32(&instr.operands[0], buffer, data);
+        if (instr.operands[1].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[1].address,
+                                 *(uint32_t *)&tempf);
+        else if (instr.operands[1].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[1].address,
+                                 *(uint32_t *)&tempf);
+      }
     }
     break;
   case InstMOVp:
@@ -851,4 +1128,19 @@ void initializeMemory(Data *data) {
  */
 uint16_t getProgramSize(uint8_t *buffer) {
   return (buffer[0] << 8) | buffer[1];
+}
+
+uint8_t verifyProgramIntegrity(uint8_t *buffer) {
+  uint32_t calculatedSize = 0;
+  uint32_t spectedSize;
+  uint16_t programSize = getProgramSize(buffer);
+  for (uint16_t i = 0; i < programSize; i++) {
+    calculatedSize += buffer[i];
+  }
+  spectedSize = (buffer[programSize] << 24) | (buffer[programSize + 1] << 16) |
+                (buffer[programSize + 2] << 8) | buffer[programSize + 3];
+  if(calculatedSize == spectedSize)
+    return noError;
+  else
+    return criticalError;
 }
