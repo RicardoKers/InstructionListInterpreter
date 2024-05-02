@@ -336,6 +336,7 @@ int main() {
   operand[1] = {X, I, 0, 0};
   operand[2] = {X, I, 0, 0};
   uint64_t Kn[10];
+  /*
   Kn[0] = 0x0000000000000000;
   Kn[1] = 0x0000000000000000;
   Kn[2] = 0x0000000000000000;
@@ -360,14 +361,14 @@ int main() {
   operand[0] = {X, I, 4, 0};
   bufPos = encodeInstruction(program, bufPos, InstOR, operand, Kn);
   // )
-  bufPos = encodeInstruction(program, bufPos, Instq, operand, Kn);
+  bufPos = encodeInstruction(program, bufPos, Instq, operand, Kn);*/
   // LD IX0.0
   operand[0] = {X, I, 0, 0};
   bufPos = encodeInstruction(program, bufPos, InstLD, operand, Kn);
-  // mov IX2.0 MX0.0
-  operand[0] = {X, K, 0, 0};
-  operand[1] = {X, M, 0, 0};
-  Kn[0] = 0x0000000000000001;
+  // mov KX1 MX0.0
+  operand[0] = {D, K, 0, 0};
+  operand[1] = {L, M, 0, 0};
+  Kn[0] = 0x0102030405060708;
   bufPos = encodeInstruction(program, bufPos, InstMOV, operand, Kn);
 
   programSize = bufPos; // including the 2 bytes for the program size

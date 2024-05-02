@@ -281,7 +281,18 @@ Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
     else
     {
       instr.operands[i].address = pos;
-      pos += 2;
+      if(instr.operands[i].memorytype == X)
+        pos += 1;
+      if(instr.operands[i].memorytype == B)
+        pos += 1;
+      if(instr.operands[i].memorytype == W)
+        pos += 2;
+      if(instr.operands[i].memorytype == D)
+        pos += 4;
+      if(instr.operands[i].memorytype == L)
+        pos += 8;
+      if(instr.operands[i].memorytype == R)
+        pos += 4;
     }
   }
   *position = pos;
