@@ -673,6 +673,64 @@ int64_t operandValueToInt64(Operand *oper, uint8_t *program, Data *data)
 }
 
 /**
+ * Gets a float from a operand.
+ * 
+ * @param oper The operand to get the value from.
+ * @param program The program buffer.
+ * @param data The data structure containing the memory and register values.
+*/
+float operandValueToFloat(Operand *oper, uint8_t *program, Data *data)
+{
+  uint32_t temp;
+  float f;
+  uint8_t *buffer = NULL;
+  if(oper->registertype == I)
+  {
+    buffer = data->Inputs;
+  }
+   if(oper->registertype == K)
+  {
+    buffer = program;
+  }
+  if(oper->registertype == M)
+  {
+    buffer = data->Memories;
+  }
+  if(oper->registertype == Q)
+  {
+    buffer = data->Outputs;
+  }
+
+  switch (oper->memorytype)
+  {
+  case X:
+      return (float)getBitFormAddress(buffer, oper->address, oper->bitNumber);
+    break;
+  case B:
+      return (float)((int8_t)buffer[oper->address]);
+    break;
+  case W:
+      return (float)(int16_t)getWordFromAddress(buffer, oper->address);
+    break;
+  case D:
+      return (float)getDoubleWordFromAddress(buffer, oper->address);
+    break;
+  case L:
+      return (float)(getLongWordFromAddress(buffer, oper->address)>>32);
+    break;
+  case R:
+      temp = getDoubleWordFromAddress(buffer, oper->address);
+      f = *(float *)&temp;
+      return f;
+    break;
+  default:
+      return 0.0;
+    break;
+  }
+  return 0.0;
+}
+
+/**
  * Executes an instruction.
  *
  * @param instr The instruction to execute.
@@ -813,7 +871,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
                                temp64);
       }
       if (instr.operands[1].memorytype == R) {
-        tempf = operandValueToInt32(&instr.operands[0], buffer, data);
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
         if (instr.operands[1].registertype == Q)
           setDoubleWordInAddress(data->Outputs, instr.operands[1].address,
                                  *(uint32_t *)&tempf);
@@ -1078,6 +1136,256 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
   case InstNOTp:
     // TODO: add stack support
     // Not included in IEC61131-3
+    break;
+  case InstADD:
+    if (data->accumulator == 1) {
+      if (instr.operands[2].memorytype == X) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 + operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setBitInAddress(data->Outputs, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+        else if (instr.operands[2].registertype == M)
+          setBitInAddress(data->Memories, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+      }
+      if (instr.operands[2].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 + operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          data->Outputs[instr.operands[2].address] = (uint8_t)temp8;
+        else if (instr.operands[2].registertype == M)
+          data->Memories[instr.operands[2].address] = (uint8_t)temp8;
+      }
+      if (instr.operands[2].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        temp16 = temp16 + operandValueToInt16(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setWordInAddress(data->Outputs, instr.operands[2].address, temp16);
+        else if (instr.operands[2].registertype == M)
+          setWordInAddress(data->Memories, instr.operands[2].address, temp16);
+      }
+      if (instr.operands[2].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        temp32 = temp32 + operandValueToInt32(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 temp32);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 temp32);
+      }
+      if (instr.operands[2].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        temp64 = temp64 + operandValueToInt64(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setLongWordInAddress(data->Outputs, instr.operands[2].address,
+                               temp64);
+        else if (instr.operands[2].registertype == M)
+          setLongWordInAddress(data->Memories, instr.operands[2].address,
+                               temp64);
+      }
+      if (instr.operands[2].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        tempf = tempf + operandValueToFloat(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+      }
+    }
+    break;
+  case InstADDp:
+    break;
+  case InstSUB:
+    if (data->accumulator == 1) {
+      if (instr.operands[2].memorytype == X) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 - operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setBitInAddress(data->Outputs, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+        else if (instr.operands[2].registertype == M)
+          setBitInAddress(data->Memories, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+      }
+      if (instr.operands[2].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 - operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          data->Outputs[instr.operands[2].address] = (uint8_t)temp8;
+        else if (instr.operands[2].registertype == M)
+          data->Memories[instr.operands[2].address] = (uint8_t)temp8;
+      }
+      if (instr.operands[2].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        temp16 = temp16 - operandValueToInt16(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setWordInAddress(data->Outputs, instr.operands[2].address, temp16);
+        else if (instr.operands[2].registertype == M)
+          setWordInAddress(data->Memories, instr.operands[2].address, temp16);
+      }
+      if (instr.operands[2].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        temp32 = temp32 - operandValueToInt32(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 temp32);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 temp32);
+      }
+      if (instr.operands[2].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        temp64 = temp64 - operandValueToInt64(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setLongWordInAddress(data->Outputs, instr.operands[2].address,
+                               temp64);
+        else if (instr.operands[2].registertype == M)
+          setLongWordInAddress(data->Memories, instr.operands[2].address,
+                               temp64);
+      }
+      if (instr.operands[2].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        tempf = tempf - operandValueToFloat(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+      }
+    }
+    break;
+  case InstSUBp:
+    break;
+  case InstMUL:
+    if (data->accumulator == 1) {
+      if (instr.operands[2].memorytype == X) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 * operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setBitInAddress(data->Outputs, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+        else if (instr.operands[2].registertype == M)
+          setBitInAddress(data->Memories, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+      }
+      if (instr.operands[2].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 * operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          data->Outputs[instr.operands[2].address] = (uint8_t)temp8;
+        else if (instr.operands[2].registertype == M)
+          data->Memories[instr.operands[2].address] = (uint8_t)temp8;
+      }
+      if (instr.operands[2].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        temp16 = temp16 * operandValueToInt16(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setWordInAddress(data->Outputs, instr.operands[2].address, temp16);
+        else if (instr.operands[2].registertype == M)
+          setWordInAddress(data->Memories, instr.operands[2].address, temp16);
+      }
+      if (instr.operands[2].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        temp32 = temp32 * operandValueToInt32(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 temp32);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 temp32);
+      }
+      if (instr.operands[2].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        temp64 = temp64 * operandValueToInt64(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setLongWordInAddress(data->Outputs, instr.operands[2].address,
+                               temp64);
+        else if (instr.operands[2].registertype == M)
+          setLongWordInAddress(data->Memories, instr.operands[2].address,
+                               temp64);
+      }
+      if (instr.operands[2].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        tempf = tempf * operandValueToFloat(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+      }
+    }
+    break;
+  case InstMULp:
+    break;
+  case InstDIV:
+    if (data->accumulator == 1) {
+      if (instr.operands[2].memorytype == X) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 / operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setBitInAddress(data->Outputs, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+        else if (instr.operands[2].registertype == M)
+          setBitInAddress(data->Memories, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+      }
+      if (instr.operands[2].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 / operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          data->Outputs[instr.operands[2].address] = (uint8_t)temp8;
+        else if (instr.operands[2].registertype == M)
+          data->Memories[instr.operands[2].address] = (uint8_t)temp8;
+      }
+      if (instr.operands[2].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        temp16 = temp16 / operandValueToInt16(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setWordInAddress(data->Outputs, instr.operands[2].address, temp16);
+        else if (instr.operands[2].registertype == M)
+          setWordInAddress(data->Memories, instr.operands[2].address, temp16);
+      }
+      if (instr.operands[2].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        temp32 = temp32 / operandValueToInt32(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 temp32);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 temp32);
+      }
+      if (instr.operands[2].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        temp64 = temp64 / operandValueToInt64(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setLongWordInAddress(data->Outputs, instr.operands[2].address,
+                               temp64);
+        else if (instr.operands[2].registertype == M)
+          setLongWordInAddress(data->Memories, instr.operands[2].address,
+                               temp64);
+      }
+      if (instr.operands[2].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        tempf = tempf / operandValueToFloat(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 *(uint32_t *)&tempf);
+      }
+    }
+    break;
+  case InstDIVp:
+    break;
+  case InstGT:
     break;
   case Instq:
     popb(&stackb, &poppedElement);

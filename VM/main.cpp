@@ -71,11 +71,54 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
 }
 
 /**
+ * Gets the size of a file.
+ * 
+ * @param filename The name of the file to get the size of.
+ * @return The size of the file.
+*/
+uint32_t getProgramSizeFromFile(const char *filename) {
+  FILE *file = fopen(filename, "r");
+  if (file == NULL) {
+    printf("Error opening file %s\n", filename);
+    return 0;
+  }
+  uint32_t size = 0;
+  while (!feof(file)) {
+    fgetc(file);
+    size++;
+  }
+  fclose(file);
+  return size;
+}
+
+/**
+ * Reads a program from a file.
+ * 
+ * @param filename The name of the file to read the program from.
+ * @param buffer The buffer to read the program into.
+ * @return The error code.
+*/
+uint8_t readProgramFromFile(const char *filename, uint8_t *buffer) {
+  FILE *file = fopen(filename, "r");
+  if (file == NULL) {
+    printf("Error opening file %s\n", filename);
+    return criticalError;
+  }
+  uint16_t i = 0;
+  while (!feof(file)) {
+    buffer[i] = fgetc(file);
+    i++;
+  }
+  fclose(file);
+  return noError;
+}
+
+/**
  * Prints an instruction.
  *
  * @param instr The instruction to print.
  */
-void printInstruction(Instruction instr) {
+void printInstruction(Instruction instr, uint8_t *program) {
   switch (instr.opcode) {
   case InstLD:
     printf("LD ");
@@ -232,6 +275,8 @@ void printInstruction(Instruction instr) {
       else if (instr.operands[i].registertype == M)
         printf("MX%d.%d ", instr.operands[i].address,
                instr.operands[i].bitNumber);
+      else if (instr.operands[i].registertype == K)
+          printf("KX%d ", (program[instr.operands[i].address])==0?0:1);
     } else if (instr.operands[i].memorytype == B) {
       if (instr.operands[i].registertype == I)
         printf("IB%d ", instr.operands[i].address);
@@ -239,6 +284,8 @@ void printInstruction(Instruction instr) {
         printf("QB%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == M)
         printf("MB%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == K)
+        printf("KB%d ", program[instr.operands[i].address]);
     } else if (instr.operands[i].memorytype == W) {
       if (instr.operands[i].registertype == I)
         printf("IW%d ", instr.operands[i].address);
@@ -246,6 +293,9 @@ void printInstruction(Instruction instr) {
         printf("QW%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == M)
         printf("MW%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == K)
+        printf("KW%d ", (int16_t)(program[instr.operands[i].address]
+                        <<8 | program[instr.operands[i].address+1]));
     } else if (instr.operands[i].memorytype == D) {
       if (instr.operands[i].registertype == I)
         printf("ID%d ", instr.operands[i].address);
@@ -253,6 +303,11 @@ void printInstruction(Instruction instr) {
         printf("QD%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == M)
         printf("MD%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == K)
+        printf("KD%d ", (int32_t)(program[instr.operands[i].address]
+                        <<24 | program[instr.operands[i].address+1]<<16 |
+                        program[instr.operands[i].address+2]<<8 |
+                        program[instr.operands[i].address+3]));
     } else if (instr.operands[i].memorytype == L) {
       if (instr.operands[i].registertype == I)
         printf("IL%d ", instr.operands[i].address);
@@ -260,6 +315,30 @@ void printInstruction(Instruction instr) {
         printf("QL%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == M)
         printf("ML%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == K)
+        printf("KD%d ", (int64_t)((uint64_t)program[instr.operands[i].address]
+                        <<56 | (uint64_t)program[instr.operands[i].address+1]<<48 |
+                        (uint64_t)program[instr.operands[i].address+2]<<40 |
+                        (uint64_t)program[instr.operands[i].address+3]<<32 |
+                        program[instr.operands[i].address+4]<<24 |
+                        program[instr.operands[i].address+5]<<16 |
+                        program[instr.operands[i].address+6]<<8 |
+                        program[instr.operands[i].address+7]));
+    }
+    else if (instr.operands[i].memorytype == R) {
+      if (instr.operands[i].registertype == I)
+        printf("IR%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == Q)
+        printf("QR%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == M)
+        printf("MR%d ", instr.operands[i].address);
+      else if (instr.operands[i].registertype == K){
+        uint32_t temp = (program[instr.operands[i].address]
+                        <<24 | program[instr.operands[i].address+1]<<16 |
+                        program[instr.operands[i].address+2]<<8 |
+                        program[instr.operands[i].address+3]);
+        printf("KR%f ",*(float *)&temp);
+      }        
     }
   }
   printf("\n");
@@ -283,7 +362,7 @@ void printMemory(Data *data) {
   for (uint16_t i = 0; i < MemorySize; i++) {
     printf("%X\t", data->Memories[i]);
   }
-  printf("\n0:\t");
+  printf("\nQ:\t");
   for (uint16_t i = 0; i < OutputSize; i++) {
     printf("%X\t", data->Outputs[i]);
   }
@@ -317,18 +396,29 @@ void printProgramInHEX(uint8_t *program, uint16_t size) {
 
 int main() {
   // Stack initalization
-
   initStackb(&stackb);
 
-  uint8_t program[1000];
+  const char *filename = "..//VMcompiler//program.bin";
+  // dynamically allocate a buffer to store the program
+  uint16_t fileSize = getProgramSizeFromFile(filename);
+  uint8_t *program = (uint8_t *)malloc(fileSize);
+  if (program == NULL) {
+    printf("Error allocating memory for the program\n");
+    return 0;
+  }
+
+  // read the program from the file
+  if (readProgramFromFile(filename, program) != noError) {
+    printf("Error reading the program from file\n");
+    return 0;
+  }
+
   Data data;
   uint16_t bufPos = 2;
   uint16_t programSize = 0;
   initializeMemory(&data);
-  // Input test data
-  data.Inputs[0] = 0b00010111;
-  data.Inputs[1] = 0b00000000;
-  data.Inputs[2] = 0b00000001;
+ 
+  /*
   // Test program
   // LD IX0.0
   Operand operand[10];
@@ -336,7 +426,7 @@ int main() {
   operand[1] = {X, I, 0, 0};
   operand[2] = {X, I, 0, 0};
   uint64_t Kn[10];
-  /*
+ 
   Kn[0] = 0x0000000000000000;
   Kn[1] = 0x0000000000000000;
   Kn[2] = 0x0000000000000000;
@@ -361,21 +451,27 @@ int main() {
   operand[0] = {X, I, 4, 0};
   bufPos = encodeInstruction(program, bufPos, InstOR, operand, Kn);
   // )
-  bufPos = encodeInstruction(program, bufPos, Instq, operand, Kn);*/
+  bufPos = encodeInstruction(program, bufPos, Instq, operand, Kn);
   // LD IX0.0
   operand[0] = {X, I, 0, 0};
   bufPos = encodeInstruction(program, bufPos, InstLD, operand, Kn);
   // mov KX1 MX0.0
-  operand[0] = {D, K, 0, 0};
-  operand[1] = {L, M, 0, 0};
-  Kn[0] = 0x0102030405060708;
+  operand[0] = {R, K, 0, 0};
+  operand[1] = {R, M, 0, 0};
+  Kn[0] = 0x4608f47e; // 8765.1234
   bufPos = encodeInstruction(program, bufPos, InstMOV, operand, Kn);
-
+  
   programSize = bufPos; // including the 2 bytes for the program size
   program[0] = (uint8_t)(programSize >> 8) & 0xFF;
   program[1] = (uint8_t)programSize & 0xFF;
 
   encodeProgramCS(program);
+  */
+
+  // Set the inputs
+  data.Inputs[0] = 0b00000001;
+  data.Inputs[1] = 0b00000001;
+  data.Inputs[2] = 0b00000000;
 
   // Run the program
   if(verifyProgramIntegrity(program) != noError) {
@@ -387,30 +483,13 @@ int main() {
   programSize = getProgramSize(program);
   while (bufPos < programSize) {
     Instruction instr = readInstruction(program, &bufPos);
-    printInstruction(instr);
+    printInstruction(instr, program);
     executeInstruction(program, instr, &data);
     printMemory(&data);
   }
   printProgramInHEX(program, programSize+4);
   printf("Size = %d\n", programSize);
-  /*
-  // value contersion test
-  bufPos=0;
- 
-
-  data.Inputs[2]= 0x3f;
-  data.Inputs[3]= 0x8c;
-  data.Inputs[4]= 0xcc;
-  data.Inputs[5]= 0xcd;
-  data.Inputs[6]= 0x01;
-  data.Inputs[7]= 0x01;
-  data.Inputs[8]= 0x01;
-  data.Inputs[9]= 0x01;
-
-  operand1 = {W, I, 0, 2}; //  memorytype; registertype; bitNumber; address;
-
-  printf("Value %d\n",operandValueToInt16(&operand1, program, &data));
-  */
+  free(program);
   //getchar();
 
   return 0;
