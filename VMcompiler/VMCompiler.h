@@ -93,7 +93,7 @@
 #define NumOpGEp 2
 #define NumOpEQ 2
 #define NumOpEQp 2
-#define NumOpNE 36
+#define NumOpNE 2
 #define NumOpNEp 2
 #define NumOpLT 2
 #define NumOpLTp 2

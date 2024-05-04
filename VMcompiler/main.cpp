@@ -431,7 +431,51 @@ uint8_t getOperandFromToken(char *token, Operand *operand, uint64_t *Kn) {
   }
   return noError;
 }
-  
+
+/**
+ * Verifies if an instruction is valid.
+ * 
+ * @param inst The instruction to verify.
+ * @return The error code.
+ */
+uint8_t verifyInstruction(Instruction *inst) {
+  uint8_t ret=noError;
+  uint8_t num_operands = getNumOp(inst->opcode);
+  for (uint8_t i = 0; i < num_operands; i++) {
+    if(inst->operands[i].registertype == I) {
+      if(inst->operands[i].address >= InputSize) {
+        printf("Error: Invalid input address %d\n", inst->operands[i].address);
+        return criticalError;
+      }
+    } else if(inst->operands[i].registertype == Q) {
+      if(inst->operands[i].address >= OutputSize) {
+        printf("Error: Invalid output address %d\n", inst->operands[i].address);
+        return criticalError;
+      }
+    } else if(inst->operands[i].registertype == M) {
+      if(inst->operands[i].address >= MemorySize) {
+        printf("Error: Invalid memory address %d\n", inst->operands[i].address);
+        return criticalError;
+      }
+    }
+  }
+  if(num_operands == 2) {
+    if(inst->operands[0].memorytype != inst->operands[1].memorytype) {
+      printf("\tWarning: operands with different memory types\n");
+      ret = warning;
+    }
+  }
+  if(num_operands == 3) {
+    if(inst->operands[0].memorytype != inst->operands[1].memorytype ||
+       inst->operands[0].memorytype != inst->operands[2].memorytype ||
+       inst->operands[1].memorytype != inst->operands[2].memorytype) {
+      printf("\tWarning: operands with different memory types\n");
+      ret = warning;
+    }
+  }
+  return ret;
+  // TODO: implement more checks
+}
 
 
 /**
@@ -881,12 +925,18 @@ int main() {
     if(getInstruction(&instr, &bufPos, program, Kn) != noError) {
       return 0;
     }
+    
     // encode the instruction into the output buffer
     outBufPos = encodeInstruction(outBuffer, outBufPos, instr.opcode, instr.operands, Kn);
     
     // read the instruction from the output buffer to test the decoding and print it
     testInstr = readInstruction(outBuffer, &testBufPos);
     printInstruction(testInstr, outBuffer); 
+
+     // verify if the instruction is valid
+    if(verifyInstruction(&testInstr) == criticalError) {
+      return 0;
+    }
   }
 
   // add final size to the output buffer
