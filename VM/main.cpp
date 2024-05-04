@@ -1,6 +1,8 @@
 #include "VM.h"
 #include "stack.h"
 #include "timer.h"
+#include "counter.h"
+#include "trigger.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Only for testing
@@ -258,6 +260,9 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstTOF:
     printf("TOF ");
     break;
+  case InstTP:
+    printf("TP ");
+  break;
   case Instq:
     printf(") ");
     break;
@@ -316,7 +321,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("ML%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%d ", (int64_t)((uint64_t)program[instr.operands[i].address]
+        printf("KD%ld ", (int64_t)((uint64_t)program[instr.operands[i].address]
                         <<56 | (uint64_t)program[instr.operands[i].address+1]<<48 |
                         (uint64_t)program[instr.operands[i].address+2]<<40 |
                         (uint64_t)program[instr.operands[i].address+3]<<32 |
@@ -396,9 +401,21 @@ void printProgramInHEX(uint8_t *program, uint16_t size) {
 
 int main() {
   // Stack initalization
+  Stackb stackb;
   initStackb(&stackb);
 
   const char *filename = "..//VMcompiler//program.bin";
+  // timer initialization
+  Timer timers[MAX_TIMERS];
+  initializeTimer(timers, sizeof(timers)/ sizeof(*timers));
+
+  // counter initialization
+  Counter counters[MAX_COUNTERS];
+  initializeCounter(counters, sizeof(counters)/ sizeof(*counters));
+  // trigger initialization
+  Trigger triggers[MAX_TRIGGERS];
+  initializeTrigger(triggers, sizeof(triggers)/ sizeof(*triggers));  
+  
   // dynamically allocate a buffer to store the program
   uint16_t fileSize = getProgramSizeFromFile(filename);
   uint8_t *program = (uint8_t *)malloc(fileSize);
@@ -416,7 +433,9 @@ int main() {
   Data data;
   uint16_t bufPos = 2;
   uint16_t programSize = 0;
-  initializeMemory(&data);
+
+
+initializeMemory(&data,timers,counters,triggers,&stackb);
  
   /*
   // Test program
@@ -460,7 +479,39 @@ int main() {
   operand[1] = {R, M, 0, 0};
   Kn[0] = 0x4608f47e; // 8765.1234
   bufPos = encodeInstruction(program, bufPos, InstMOV, operand, Kn);
-  
+  // Timer (k2,MX8.3,MW2,K1,Q0.3)
+    operand[0] = {B, K, 0, 0};
+    Kn[0]=2;
+    operand[1] = {X, I, 0, 0};
+    operand[2] = {W, M, 0, 2};
+    Kn[2]=10;
+    operand[3] = {B, K, 0, 0};
+    Kn[3]=3;
+    operand[4] = {X, Q, 3, 0};
+    bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+    bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+    bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+    bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+    bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+    bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+    //counter (k3, IX0.0, k4,IX0.7,q0.6)
+    operand[0] = {B, K, 0, 0};
+    Kn[0]=2;
+    operand[1] = {X, I, 0, 0};
+    operand[2] = {W, M, 0, 2};
+    Kn[2]=4;
+    operand[4] = {X, Q, 6, 0};
+
+  //Load operation
+    operand[3] = {X, I, 0, 0};
+    bufPos = encodeInstruction(program, bufPos, InstCTD, operand, Kn);
+    operand[3] = {X, I, 7, 0};
+
+   operand[1] = {X, I, 0, 0};
+    bufPos = encodeInstruction(program, bufPos, InstCTD, operand, Kn);
+   operand[1] = {X, I, 7, 0};
+    bufPos = encodeInstruction(program, bufPos, InstCTD, operand, Kn);
+   
   programSize = bufPos; // including the 2 bytes for the program size
   program[0] = (uint8_t)(programSize >> 8) & 0xFF;
   program[1] = (uint8_t)programSize & 0xFF;
@@ -489,7 +540,7 @@ int main() {
   }
   printProgramInHEX(program, programSize+4);
   printf("Size = %d\n", programSize);
-  free(program);
+  //free(program);
   //getchar();
 
   return 0;

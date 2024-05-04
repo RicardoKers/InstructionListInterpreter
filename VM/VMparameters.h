@@ -4,12 +4,8 @@
 // Memory definition
 #define MemorySize 10 // Size of the memory in bytes
 // Input definition
-#define InputSize 10  // Number of inputs in bytes
+#define InputSize 10 // Number of inputs in bytes
 // Output definition
 #define OutputSize 10 // Number of outputs in bytes
-// Stack definition
-#define STACK_MAX_SIZE 10 // Maximum stack size
-// Timers definition
-#define MAX_TEMPS 10 // Maximum timers available
 
 #endif // VMPARAMETERS_H_INCLUDED

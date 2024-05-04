@@ -55,6 +55,9 @@
 #define InstTON 44
 #define InstTOF 45
 #define Instq 46
+#define InstTP 47
+#define InstRTRIGGER 48 
+#define InstFTRIGGER 49 
 
 // Number of operands
 #define NumOpLD 1
@@ -99,11 +102,14 @@
 #define NumOpLTp 2
 #define NumOpLE 2
 #define NumOpLEp 2
-#define NumOpCTU 5 // TODO: Adjust
-#define NumOpCTD 5 // TODO: Adjust
-#define NumOpTON 5 // TODO: Adjust
-#define NumOpTOF 5 // TODO: Adjust
+#define NumOpCTU 5
+#define NumOpCTD 5
+#define NumOpTON 5
+#define NumOpTOF 5
 #define NumOpq 0
+#define NumOpTP 5 
+#define NumOpRTRIGGER 2 
+#define NumOpFTRIGGER 2
 
 // instruction names
 const char *InstNames[] = {
@@ -153,10 +159,13 @@ const char *InstNames[] = {
   "CTD",
   "TON",
   "TOF",
-  ")"
+  ")",
+  "TP",
+  "RTRIGGER",
+  "FTRIGGER" 
 };
 
-#define NumInstructions 47
+#define NumInstructions 50
 
 // Memory types
 #define X 0 // Bit

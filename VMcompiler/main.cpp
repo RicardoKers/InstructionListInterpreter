@@ -468,6 +468,10 @@ uint8_t verifyInstruction(Instruction *inst) {
       printf("\tWarning: operands with different memory types\n");
       ret = warning;
     }
+    if((inst->opcode == InstMOV || inst->opcode == InstMOVp) && inst->operands[1].registertype == K) {
+      printf("Error: cannot change a constant value\n");
+      return criticalError;
+    }
   }
   if(num_operands == 3) {
     if(inst->operands[0].memorytype != inst->operands[1].memorytype ||
@@ -475,6 +479,10 @@ uint8_t verifyInstruction(Instruction *inst) {
        inst->operands[1].memorytype != inst->operands[2].memorytype) {
       printf("\tWarning: operands with different memory types\n");
       ret = warning;
+    }
+    if(inst->operands[2].registertype == K) {
+      printf("Error: cannot change a constant value\n");
+      return criticalError;
     }
   }
   return ret;
@@ -922,10 +930,11 @@ int main() {
   printf("\nCompiling: %s\n\n", filename);
   while (program[bufPos] != '\0')
   {
-    // ignore extra \n at the end of the file
-    if(program[bufPos] == '\n'&& program[bufPos+1] == '\0') {
-      break;
+    while(program[bufPos] == ' ' || program[bufPos+1] == '\t' || program[bufPos] == '\n') {
+      bufPos++;      
     }
+    
+    if(program[bufPos] == '\0') break;
 
     // get the instruction from the buffer
     if(getInstruction(&instr, &bufPos, program, Kn) != noError) {

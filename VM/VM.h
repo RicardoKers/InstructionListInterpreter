@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "VMparameters.h"
+#include "trigger.h"
+#include "stack.h"
+#include "timer.h"
+#include "counter.h"
 
 // Instructions
 #define InstLD 0
@@ -55,6 +59,9 @@
 #define InstTON 44
 #define InstTOF 45
 #define Instq 46
+#define InstTP 47
+#define InstRTRIGGER 48 
+#define InstFTRIGGER 49 
 
 // Number of operands
 #define NumOpLD 1
@@ -99,11 +106,14 @@
 #define NumOpLTp 2
 #define NumOpLE 2
 #define NumOpLEp 2
-#define NumOpCTU 5 // TODO: Adjust
-#define NumOpCTD 5 // TODO: Adjust
-#define NumOpTON 5 // TODO: Adjust
-#define NumOpTOF 5 // TODO: Adjust
+#define NumOpCTU 5
+#define NumOpCTD 5
+#define NumOpTON 5
+#define NumOpTOF 5
 #define NumOpq 0
+#define NumOpTP 5 
+#define NumOpRTRIGGER 2 
+#define NumOpFTRIGGER 2
 
 // Memory types
 #define X 0 // Bit
@@ -150,7 +160,7 @@ typedef struct stInstruction {
 } Instruction;
 
 uint8_t getNumOp(uint8_t inst);
-void initializeMemory(Data *data);
+void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stackb *astack);
 void executeInstruction(uint8_t *buffer, Instruction instr, Data *data);
 Instruction readInstruction(uint8_t *buffer, uint16_t *position);
 uint16_t getProgramSize(uint8_t *buffer);

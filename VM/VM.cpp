@@ -86,19 +86,28 @@ The implemented instructions are as follows:
 39 LT( (Less Than, open parentheses): LE( operand1, operand2;
 40 LE (Less or Equal): LE operand1, operand2;
 41 LE( (Less or Equal, open parentheses): LE( operand1, operand2;
-42 CTU (Counter Up): CTU operand;
-43 CTD (Counter Down): CTD operand;
-44 TON (Timer On Delay): TON operand;
+42 CTU (Counter Up): CTU(ncouter, CO, PV, RST, OUT); //aqui
+43 CTD (Counter Down): CTD(ncouter, CO, PV, LD, OUT);
+44 TON (Timer On Delay): TON(ntimer, IN, PT, prescaler, OUT); Example TON(K5, IX0.0, 10,1,QX0.1) //aqui
 45 TOF (Timer Off Delay): TOF operand;
 46 ) (close parentheses): ); "Stract instruction from stack";
+47 TP (Timer Pulse)
+48 R_TRIGGER (Rising edge detection) R_TRIGGER (IN, QO)
+49 F_TRIGGER (Falling edge detection) F_TRIGGER (IN, QO)
 */
 
 #include "VM.h"
 #include "stack.h"
 #include "timer.h"
+#include "counter.h"
+#include "trigger.h"
 
 StackElementb poppedElement;
-Stackb stackb;
+Stackb *stackb;
+Timer *timers;
+Counter *counters;
+Trigger *triggers;
+
 
 /**
  * Gets the number of operands for an instruction.
@@ -245,6 +254,15 @@ uint8_t getNumOp(uint8_t inst) {
     break;
   case InstTOF:
       return NumOpTOF;
+    break;
+  case InstTP: //aqui
+    return NumOpTP;
+    break;
+  case InstRTRIGGER://aqui
+    return NumOpRTRIGGER;
+    break;
+  case InstFTRIGGER://aqui
+    return NumOpFTRIGGER;
     break;
   case Instq:
       return NumOpq;
@@ -757,6 +775,9 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
         data->accumulator =
             getBitFormAddress(data->Memories, instr.operands[0].address,
                               instr.operands[0].bitNumber);
+      else if (instr.operands[0].registertype == K)
+        data->accumulator = 
+             operandValueToInt8(&instr.operands[0], buffer, data) == 0 ? 0 : 1;      
     }
     break;
   case InstLDN:
@@ -764,21 +785,18 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       if (instr.operands[0].registertype == I)
         data->accumulator =
             (getBitFormAddress(data->Inputs, instr.operands[0].address,
-                               instr.operands[0].bitNumber)) == 0
-                ? 1
-                : 0;
+                               instr.operands[0].bitNumber)) == 0 ? 1 : 0;
       else if (instr.operands[0].registertype == Q)
         data->accumulator =
             (getBitFormAddress(data->Outputs, instr.operands[0].address,
-                               instr.operands[0].bitNumber)) == 0
-                ? 1
-                : 0;
+                               instr.operands[0].bitNumber)) == 0 ? 1 : 0;
       else if (instr.operands[0].registertype == M)
         data->accumulator =
             (getBitFormAddress(data->Memories, instr.operands[0].address,
-                               instr.operands[0].bitNumber)) == 0
-                ? 1
-                : 0;
+                               instr.operands[0].bitNumber)) == 0 ? 1 : 0;
+    else if (instr.operands[0].registertype == K)
+        data->accumulator = 
+             operandValueToInt8(&instr.operands[0], buffer, data) == 0 ? 1 : 0;      
     }
     break;
   case InstST:
@@ -904,7 +922,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstANDp:
-    pushb(&stackb, InstANDp, data->accumulator);
+    pushb(stackb, InstANDp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -928,27 +946,21 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
         data->accumulator =
             data->accumulator &
             (getBitFormAddress(data->Inputs, instr.operands[0].address,
-                               instr.operands[0].bitNumber) == 0
-                 ? 1
-                 : 0);
+                               instr.operands[0].bitNumber) == 0 ? 1 : 0);
       else if (instr.operands[0].registertype == Q)
         data->accumulator =
             data->accumulator &
             (getBitFormAddress(data->Outputs, instr.operands[0].address,
-                               instr.operands[0].bitNumber) == 0
-                 ? 1
-                 : 0);
+                               instr.operands[0].bitNumber) == 0 ? 1 : 0);
       else if (instr.operands[0].registertype == M)
         data->accumulator =
             data->accumulator &
             (getBitFormAddress(data->Memories, instr.operands[0].address,
-                               instr.operands[0].bitNumber) == 0
-                 ? 1
-                 : 0);
+                               instr.operands[0].bitNumber) == 0 ? 1 : 0);
     }
     break;
   case InstANDNp:
-    pushb(&stackb, InstANDNp, data->accumulator);
+    pushb(stackb, InstANDNp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -986,7 +998,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstORp:
-    pushb(&stackb, InstORp, data->accumulator);
+    pushb(stackb, InstORp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1030,7 +1042,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstORNp:
-    pushb(&stackb, InstORNp, data->accumulator);
+    pushb(stackb, InstORNp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1068,7 +1080,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstXORp:
-    pushb(&stackb, InstXORp, data->accumulator);
+    pushb(stackb, InstXORp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1112,7 +1124,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstXORNp:
-    pushb(&stackb, InstXORNp, data->accumulator);
+    pushb(stackb, InstXORNp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1386,9 +1398,188 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
   case InstDIVp:
     break;
   case InstGT:
+    if (data->accumulator == 1) {
+      if (instr.operands[1].memorytype == X) {
+        temp8 = getBit(operandValueToInt8(&instr.operands[0], buffer, data),instr.operands[0].bitNumber);
+        data->accumulator = (temp8 > getBit(operandValueToInt8(&instr.operands[1], buffer, data),
+                            instr.operands[1].bitNumber) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        data->accumulator = (temp8 > operandValueToInt8(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        data->accumulator = (temp16 > operandValueToInt16(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        data->accumulator = (temp32 > operandValueToInt32(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        data->accumulator = (temp64 > operandValueToInt64(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        data->accumulator = (tempf > operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+    }
+    break;
+  case InstGTp:
+    break;
+  case InstGE:
+    if (data->accumulator == 1) {
+      if (instr.operands[1].memorytype == X) {
+        temp8 = getBit(operandValueToInt8(&instr.operands[0], buffer, data),instr.operands[0].bitNumber);
+        data->accumulator = (temp8 >= getBit(operandValueToInt8(&instr.operands[1], buffer, data),instr.operands[1].bitNumber) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        data->accumulator = (temp8 >= operandValueToInt8(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        data->accumulator = (temp16 >= operandValueToInt16(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        data->accumulator = (temp32 >= operandValueToInt32(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        data->accumulator = (temp64 >= operandValueToInt64(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        data->accumulator = (tempf >= operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+    }
+    break;
+  case InstGEp:
+    break;
+  case InstEQ:
+    if (data->accumulator == 1) {
+      if (instr.operands[1].memorytype == X) {
+        temp8 = getBit(operandValueToInt8(&instr.operands[0], buffer, data),instr.operands[0].bitNumber);
+        data->accumulator = (temp8 == getBit(operandValueToInt8(&instr.operands[1], buffer, data),instr.operands[1].bitNumber) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        data->accumulator = (temp8 == operandValueToInt8(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        data->accumulator = (temp16 == operandValueToInt16(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        data->accumulator = (temp32 == operandValueToInt32(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        data->accumulator = (temp64 == operandValueToInt64(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        data->accumulator = (tempf == operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+    }
+    break;
+  case InstEQp:
+    break;
+  case InstNE:
+    if (data->accumulator == 1) {
+      if (instr.operands[1].memorytype == X) {
+        temp8 = getBit(operandValueToInt8(&instr.operands[0], buffer, data),instr.operands[0].bitNumber);
+        data->accumulator = (temp8 != getBit(operandValueToInt8(&instr.operands[1], buffer, data),instr.operands[1].bitNumber) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        data->accumulator = (temp8 != operandValueToInt8(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        data->accumulator = (temp16 != operandValueToInt16(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        data->accumulator = (temp32 != operandValueToInt32(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        data->accumulator = (temp64 != operandValueToInt64(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        data->accumulator = (tempf != operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+    }
+    break;
+  case InstNEp:
+    break;
+  case InstLT:
+    if (data->accumulator == 1) {
+      if (instr.operands[1].memorytype == X) {
+        temp8 = getBit(operandValueToInt8(&instr.operands[0], buffer, data),instr.operands[0].bitNumber);
+        data->accumulator = (temp8 < getBit(operandValueToInt8(&instr.operands[1], buffer, data),instr.operands[1].bitNumber) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        data->accumulator = (temp8 < operandValueToInt8(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        data->accumulator = (temp16 < operandValueToInt16(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        data->accumulator = (temp32 < operandValueToInt32(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        data->accumulator = (temp64 < operandValueToInt64(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        data->accumulator = (tempf < operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+    }
+    break;
+  case InstLTp:
+    break;
+  case InstLE:
+      if (data->accumulator == 1) {
+      if (instr.operands[1].memorytype == X) {
+        temp8 = getBit(operandValueToInt8(&instr.operands[0], buffer, data),instr.operands[0].bitNumber);
+        data->accumulator = (temp8 <= getBit(operandValueToInt8(&instr.operands[1], buffer, data),instr.operands[1].bitNumber) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        data->accumulator = (temp8 <= operandValueToInt8(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        data->accumulator = (temp16 <= operandValueToInt16(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        data->accumulator = (temp32 <= operandValueToInt32(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        data->accumulator = (temp64 <= operandValueToInt64(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+      if (instr.operands[1].memorytype == R) {
+        tempf = operandValueToFloat(&instr.operands[0], buffer, data);
+        data->accumulator = (tempf <= operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
+      }
+    }
+    break;
+  case InstLEp:
     break;
   case Instq:
-    popb(&stackb, &poppedElement);
+    popb(stackb, &poppedElement);
     switch (poppedElement.instruction) {
     case InstANDp:
       data->accumulator = data->accumulator & poppedElement.value;
@@ -1414,9 +1605,282 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     default:
       break;
     }
+    break;
+  case InstTON: // TON(ntimer, IN, ticks, prescaler, OUT) Example TON(K5,
+                // IX0.0, K10,K1,QX0.1
 
-  // TODO: add more instructions here, ADD, SUB, MUL, DIV, GT, GE, EQ, NE, LT,
-  // LE, CTU, CTD, TON, TOF etc
+    temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+    if (instr.operands[1].registertype == I) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == M) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Memories, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == Q) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    }
+
+    if (instr.operands[2].registertype == K) {
+      timers[temp8].PT = operandValueToInt16(&instr.operands[2], buffer, data);
+    } else if (instr.operands[2].registertype == M) {
+      timers[temp8].PT =
+          getWordFromAddress(data->Memories, instr.operands[2].address);
+    }
+
+    if (instr.operands[3].registertype == K) {
+      timers[temp8].prescaler =
+          operandValueToInt8(&instr.operands[3], buffer, data);
+    } else if (instr.operands[3].registertype == M) {
+      timers[temp8].prescaler = (uint8_t)(getWordFromAddress(
+          data->Memories, instr.operands[2].address));
+    }
+
+    runTimerTON(&timers[temp8]);
+
+    if (instr.operands[4].registertype == Q) {
+      setBitInAddress(data->Outputs, instr.operands[4].address,
+                      instr.operands[4].bitNumber, timers[temp8].QO);
+    } else if (instr.operands[4].registertype == M) {
+      setBitInAddress(data->Memories, instr.operands[4].address,
+                      instr.operands[4].bitNumber, timers[temp8].QO);
+    }
+    break;
+
+  case InstTOF: // TOF(ntimer, IN, ticks, prescaler, OUT) Example TOF(K5,
+                // IX0.0, K10,K1,QX0.1
+    temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+    if (instr.operands[1].registertype == I) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == M) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Memories, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == Q) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    }
+
+    if (instr.operands[2].registertype == K) {
+      timers[temp8].PT = operandValueToInt16(&instr.operands[2], buffer, data);
+    } else if (instr.operands[2].registertype == M) {
+      timers[temp8].PT =
+          getWordFromAddress(data->Memories, instr.operands[2].address);
+    }
+
+    if (instr.operands[3].registertype == K) {
+      timers[temp8].prescaler =
+          operandValueToInt8(&instr.operands[3], buffer, data);
+    } else if (instr.operands[3].registertype == M) {
+      timers[temp8].prescaler = (uint8_t)(getWordFromAddress(
+          data->Memories, instr.operands[2].address));
+    }
+
+    runTimerTOF(&timers[temp8]);
+
+    if (instr.operands[4].registertype == Q) {
+      setBitInAddress(data->Outputs, instr.operands[4].address,
+                      instr.operands[4].bitNumber, timers[temp8].QO);
+    } else if (instr.operands[4].registertype == M) {
+      setBitInAddress(data->Memories, instr.operands[4].address,
+                      instr.operands[4].bitNumber, timers[temp8].QO);
+    }
+    break;
+
+  case InstTP: // TOF(ntimer, IN, PT, prescaler, OUT) Example TOF(K5,
+               // IX0.0, K10,K1,QX0.1
+    temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+    if (instr.operands[1].registertype == I) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == M) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Memories, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == Q) {
+      timers[temp8].IN =
+          (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    }
+
+    if (instr.operands[2].registertype == K) {
+      timers[temp8].PT = operandValueToInt16(&instr.operands[2], buffer, data);
+    } else if (instr.operands[2].registertype == M) {
+      timers[temp8].PT =
+          getWordFromAddress(data->Memories, instr.operands[2].address);
+    }
+
+    if (instr.operands[3].registertype == K) {
+      timers[temp8].prescaler =
+          operandValueToInt8(&instr.operands[3], buffer, data);
+    } else if (instr.operands[3].registertype == M) {
+      timers[temp8].prescaler = (uint8_t)(getWordFromAddress(
+          data->Memories, instr.operands[2].address));
+    }
+
+    runTimerTP(&timers[temp8]);
+
+    if (instr.operands[4].registertype == Q) {
+      setBitInAddress(data->Outputs, instr.operands[4].address,
+                      instr.operands[4].bitNumber, timers[temp8].QO);
+    } else if (instr.operands[4].registertype == M) {
+      setBitInAddress(data->Memories, instr.operands[4].address,
+                      instr.operands[4].bitNumber, timers[temp8].QO);
+    }
+    break;
+
+    case InstCTU: // CTU(ncouter, CO, PV, OUT); example CTU(K3, IX0.3, k4,QX0.6)
+                  // C0-> Input for counting
+                  //PV -> Set point for counting
+      temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+      if (instr.operands[1].registertype == I) {
+        counters[temp8].CO =
+            (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                               instr.operands[1].bitNumber) == 0
+                 ? 0
+                 : 1);
+      } else if (instr.operands[1].registertype == M) {
+        counters[temp8].CO =
+            (getBitFormAddress(data->Memories, instr.operands[1].address,
+                               instr.operands[1].bitNumber) == 0
+                 ? 0
+                 : 1);
+      } else if (instr.operands[1].registertype == Q) {
+        counters[temp8].CO =
+            (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                               instr.operands[1].bitNumber) == 0
+                 ? 0
+                 : 1);
+      }
+
+      if (instr.operands[2].registertype == K) {
+        counters[temp8].PV = operandValueToInt16(&instr.operands[2], buffer, data);
+      } else if (instr.operands[2].registertype == M) {
+        counters[temp8].PV =
+            getWordFromAddress(data->Memories, instr.operands[2].address);
+      }
+
+      if (instr.operands[3].registertype == I) {
+        counters[temp8].R_LD =
+            (getBitFormAddress(data->Inputs, instr.operands[3].address,
+                               instr.operands[3].bitNumber) == 0
+                 ? 0
+                 : 1);
+      } else if (instr.operands[3].registertype == M) {
+        counters[temp8].R_LD =
+            (getBitFormAddress(data->Memories, instr.operands[3].address,
+                               instr.operands[3].bitNumber) == 0
+                 ? 0
+                 : 1);
+      } else if (instr.operands[3].registertype == Q) {
+        counters[temp8].R_LD =
+            (getBitFormAddress(data->Outputs, instr.operands[3].address,
+                               instr.operands[3].bitNumber) == 0
+                 ? 0
+                 : 1);
+      }
+
+
+      runCounterUp(&counters[temp8]);
+
+      if (instr.operands[4].registertype == Q) {
+        setBitInAddress(data->Outputs, instr.operands[4].address,
+                        instr.operands[4].bitNumber, counters[temp8].QO);
+      } else if (instr.operands[4].registertype == M) {
+        setBitInAddress(data->Memories, instr.operands[4].address,
+                        instr.operands[4].bitNumber, counters[temp8].QO);
+      }
+    break;
+
+
+  case InstCTD: // CTU(ncouter, CO, PV, OUT); example CTU(K3, IX0.3, k4,QX0.6)
+                // C0-> Input for counting
+                //PV -> Set point for counting
+    temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+    if (instr.operands[1].registertype == I) {
+      counters[temp8].CO =
+          (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == M) {
+      counters[temp8].CO =
+          (getBitFormAddress(data->Memories, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == Q) {
+      counters[temp8].CO =
+          (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    }
+
+    if (instr.operands[2].registertype == K) {
+      counters[temp8].PV = operandValueToInt16(&instr.operands[2], buffer, data);
+    } else if (instr.operands[2].registertype == M) {
+      counters[temp8].PV =
+          getWordFromAddress(data->Memories, instr.operands[2].address);
+    }
+
+    if (instr.operands[3].registertype == I) {
+      counters[temp8].R_LD =
+          (getBitFormAddress(data->Inputs, instr.operands[3].address,
+                             instr.operands[3].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[3].registertype == M) {
+      counters[temp8].R_LD =
+          (getBitFormAddress(data->Memories, instr.operands[3].address,
+                             instr.operands[3].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[3].registertype == Q) {
+      counters[temp8].R_LD =
+          (getBitFormAddress(data->Outputs, instr.operands[3].address,
+                             instr.operands[3].bitNumber) == 0
+               ? 0
+               : 1);
+    }
+
+
+    runCounterDown(&counters[temp8]);
+
+    if (instr.operands[4].registertype == Q) {
+      setBitInAddress(data->Outputs, instr.operands[4].address,
+                      instr.operands[4].bitNumber, counters[temp8].QO);
+    } else if (instr.operands[4].registertype == M) {
+      setBitInAddress(data->Memories, instr.operands[4].address,
+                      instr.operands[4].bitNumber, counters[temp8].QO);
+    }
+    break;
+  // TODO:  CTU, CTD, TON, TOF etc
   default:
     break;
   }
@@ -1427,7 +1891,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
  *
  * @param data The data structure containing the memory and register values.
  */
-void initializeMemory(Data *data) {
+void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stackb *astack) {
   for (uint16_t i = 0; i < MemorySize; i++) {
     data->Memories[i] = 0;
   }
@@ -1437,6 +1901,11 @@ void initializeMemory(Data *data) {
   for (uint16_t i = 0; i < OutputSize; i++) {
     data->Outputs[i] = 0;
   }
+
+  timers = atimers;
+  counters = acounters;
+  triggers = atriggers;
+  stackb = astack;
 }
 
 /**
