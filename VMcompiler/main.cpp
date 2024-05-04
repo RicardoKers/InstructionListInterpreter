@@ -1,15 +1,19 @@
-// Este programa serve para ler um arquivo de texto com instruções de um programa em linguagem de 
-// máquina e transformar em um arquivo binário. O arquivo binário é composto por um cabeçalho de 2 bytes indicando o tamanho do programa, seguido das instruções e por fim um checksum de 4 bytes.
-// O programa é composto por instruções de 0 ou mais operandos, onde cada operando é composto por 3 bytes, sendo o primeiro byte composto
-// pelo tipo de memória (3 bits), o tipo de registrador (2 bits) e o número do bit (3 bits). Os outros 2 bytes são o endereço do operando para
-// os tipos de registradores I, Q, M e o valor do operando para o tipo de registrador K, neste caso com tamanho de 1 a 8 bytes.
-// O arquivo a ser lido deve conter as instruções em texto, onde cada instrução é composta pelo nome da instrução seguido dos operandos 
-// separados por espaço. Por exemplo:
-// LD IX1.0, que carrega o bit 0 do registrador de entrada 1.
-// AND IX1.0 MX0.0, que faz a operação AND entre o bit 0 do registrador de entrada 1 e o bit 0 do registrador de memória 0.
-// MOV KX1 MX0.0, que move o valor constante 1 para o bit 0 do registrador de memória 0.
-// O programa permite comentários iniciados por #.
-// O programa deve ser capaz de ler o arquivo de texto, transformar as instruções em instruções binárias e salvar em um arquivo binário.
+/* This program is used to read a text file with machine language instructions and convert 
+it into a binary file. The binary file consists of a 2-byte header indicating the size of 
+the program, followed by the instructions, and finally a 4-byte checksum. The program is 
+composed of instructions with 0 or more operands, where each operand is composed of 3 bytes. 
+The first byte represents the memory type (3 bits), register type (2 bits), and bit number (3 bits). 
+The other 2 bytes represent the operand address for register types I, Q, M, and the operand value 
+for register type K, which can range from 1 to 8 bytes. The input file should contain the instructions 
+in text format, where each instruction consists of the instruction name followed by the operands 
+separated by spaces. For example:
+LD IX1.0, which loads bit 0 of input register 1.
+AND IX1.0 MX0.0, which performs the AND operation between bit 0 of input register 1 and bit 0 of memory register 0.
+MOV KX1 MX0.0, which moves the constant value 1 to bit 0 of memory register 0.
+The program allows comments starting with #.
+The program should be able to read the text file, convert the instructions into binary instructions, 
+and save them into a binary file.
+*/
 
 #include "VMCompiler.h"
 
@@ -279,7 +283,7 @@ uint8_t get16bitNumberFromToken(uint8_t *pos, char *token, uint16_t *value) {
     if (token[(*pos)] >= '0' && token[(*pos)] <= '9') {
       temp = temp * 10 + (token[(*pos)] - '0');
     } else {
-      printf("Invalid number %s\n", token);
+      printf("Error: Invalid number %s\n", token);
       return criticalError;
     }
     (*pos)++;
@@ -308,7 +312,7 @@ uint8_t getOperandFromToken(char *token, Operand *operand, uint64_t *Kn) {
   } else if (token[i] == 'K') {
     operand->registertype = K;
   } else {
-    printf("Invalid register type %c\n", token[i]);
+    printf("Error: Invalid register type %c\n", token[i]);
     return criticalError;
   }
   i++;
@@ -326,7 +330,7 @@ uint8_t getOperandFromToken(char *token, Operand *operand, uint64_t *Kn) {
     } else if (token[i] == 'R') {
       operand->memorytype = R;
     } else {
-      printf("Invalid memory type %c\n", token[i]);
+      printf("Error: Invalid memory type %c\n", token[i]);
       return criticalError;
     }
     i++;
@@ -350,12 +354,12 @@ uint8_t getOperandFromToken(char *token, Operand *operand, uint64_t *Kn) {
           if(tmp>=0 && tmp<=7) {
             operand->bitNumber = tmp;
           } else {
-            printf("Invalid bit number %d\n", tmp);
+            printf("Error: Invalid bit number %d\n", tmp);
             return criticalError;
           }
         }
       } else {
-        printf("Invalid token %s\n", token);
+        printf("Error: Invalid token %s\n", token);
         return criticalError;
       }
     } else if (token[i] == 'B') {
@@ -389,7 +393,7 @@ uint8_t getOperandFromToken(char *token, Operand *operand, uint64_t *Kn) {
         return criticalError;
       }
     } else {
-      printf("Invalid memory type %c\n", token[i]);
+      printf("Error: Invalid memory type %c\n", token[i]);
       return criticalError;
     }
     return noError;
@@ -417,7 +421,7 @@ uint8_t getOperandFromToken(char *token, Operand *operand, uint64_t *Kn) {
   }
   // check if the instruction is valid
   if(i==NumInstructions) {
-    printf("Invalid instruction %s\n", token);
+    printf("Error: Invalid instruction %s\n", token);
     return criticalError;
   }
   uint8_t num_operands = getNumOp(opcode);
@@ -887,18 +891,20 @@ Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
 // Main function
 ///////////////////////////////////////////////////////////////////////////////////
 int main() {
+  // file name
+  const char *filename = "program.il";
 
   // dynamically allocate a buffer to store the program
-  uint16_t programSize = getProgramSizeFromFile("program.txt");
+  uint16_t programSize = getProgramSizeFromFile(filename);
   uint8_t *program = (uint8_t *)malloc(programSize);
   if (program == NULL) {
-    printf("Error allocating memory for the program\n");
+    printf("Error: allocating memory for the program\n");
     return 0;
   }
 
   // read the program from the file
-  if (readProgramFromFile("program.txt", program) != noError) {
-    printf("Error reading the program from file\n");
+  if (readProgramFromFile(filename, program) != noError) {
+    printf("Error: reading the program from file\n");
     return 0;
   }
 
@@ -913,7 +919,7 @@ int main() {
   Instruction instr;
   Instruction testInstr;
   uint64_t Kn[10];
-  printf("\n");
+  printf("\nCompiling: %s\n\n", filename);
   while (program[bufPos] != '\0')
   {
     // ignore extra \n at the end of the file
@@ -955,6 +961,6 @@ int main() {
   fwrite(outBuffer, 1, outBufPos+4, file);
   fclose(file);
 
-  printf("\nCompiled successfully\n");
+  printf("\nCompiled successfully\n\n");
   return 0;
 }
