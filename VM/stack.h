@@ -11,42 +11,20 @@ Stack structure for boolean values(accumulator)
 */
 typedef struct {
   uint8_t instruction;
-  uint8_t value;
-} StackElementb;
+  uint64_t value;
+} StackElement;
 
 typedef struct {
-  StackElementb elements[MAX_SIZE];
+  StackElement elements[MAX_SIZE];
   int top;
-} Stackb;
-
-/*
-Stack structure for integer values
-*/
-
-typedef struct {
-  uint8_t instruction;
-  int16_t value;
-} StackElementw;
-
-typedef struct {
-  StackElementw elements[MAX_SIZE];
-  int top;
-} Stackw;
-
+} Stack;
 
 // Function prototypes for boolean stack
-void initStackb(Stackb *s);
-uint8_t isFullb(Stackb *s);
-uint8_t isEmptyb(Stackb *s);
-uint8_t pushb(Stackb *s, char instruction, uint8_t value);
-uint8_t popb(Stackb *s, StackElementb *element);
-
-// Function prototypes for integer stack
-void initStackw(Stackb *s);
-uint8_t isFullw(Stackb *s);
-uint8_t isEmptyw(Stackb *s);
-uint8_t pushw(Stackw *s, char instruction, int16_t value);
-uint8_t popw(Stackw *s, StackElementw *element);
+void initStack(Stack *s);
+uint8_t isFull(Stack *s);
+uint8_t isEmpty(Stack *s);
+uint8_t push(Stack *s, char instruction, uint64_t value);
+uint8_t pop(Stack *s, StackElement *element);
 
 
 

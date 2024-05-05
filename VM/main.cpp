@@ -67,7 +67,7 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
       }
     }
   }
-  
+
   buffer[bufPos] = 0;
   return bufPos;
 }
@@ -101,14 +101,15 @@ uint32_t getProgramSizeFromFile(const char *filename) {
  * @return The error code.
 */
 uint8_t readProgramFromFile(const char *filename, uint8_t *buffer) {
-  FILE *file = fopen(filename, "r");
+  FILE *file = fopen(filename, "rb");
   if (file == NULL) {
     printf("Error opening file %s\n", filename);
     return criticalError;
   }
   uint16_t i = 0;
-  while (!feof(file)) {
-    buffer[i] = fgetc(file);
+  int c;
+  while ((c = fgetc(file)) != EOF) {
+    buffer[i] = c;
     i++;
   }
   fclose(file);
@@ -144,109 +145,109 @@ void printInstruction(Instruction instr, uint8_t *program) {
     printf("MOV ");
     break;
   case InstMOVp:
-    printf("MOV (");
+    printf("MOV( ");
     break;
   case InstAND:
     printf("AND ");
     break;
   case InstANDp:
-    printf("AND (");
+    printf("AND( ");
     break;
   case InstANDN:
     printf("ANDN ");
     break;
   case InstANDNp:
-    printf("ANDN (");
+    printf("ANDN( ");
     break;
   case InstOR:
     printf("OR ");
     break;
   case InstORp:
-    printf("OR (");
+    printf("OR( ");
     break;
   case InstORN:
     printf("ORN ");
     break;
   case InstORNp:
-    printf("ORN (");
+    printf("ORN( ");
     break;
   case InstXOR:
     printf("XOR ");
     break;
   case InstXORp:
-    printf("XOR (");
+    printf("XOR( ");
     break;
   case InstXORN:
     printf("XORN ");
     break;
   case InstXORNp:
-    printf("XORN (");
+    printf("XORN( ");
     break;
   case InstNOT:
     printf("NOT ");
     break;
   case InstNOTp:
-    printf("NOT (");
+    printf("NOT( ");
     break;
   case InstADD:
     printf("ADD ");
     break;
   case InstADDp:
-    printf("ADD (");
+    printf("ADD( ");
     break;
   case InstSUB:
     printf("SUB ");
     break;
   case InstSUBp:
-    printf("SUB (");
+    printf("SUB( ");
     break;
   case InstMUL:
     printf("MUL ");
     break;
   case InstMULp:
-    printf("MUL (");
+    printf("MUL( ");
     break;
   case InstDIV:
     printf("DIV ");
     break;
   case InstDIVp:
-    printf("DIV (");
+    printf("DIV( ");
     break;
   case InstGT:
     printf("GT ");
     break;
   case InstGTp:
-    printf("GT (");
+    printf("GT( ");
     break;
   case InstGE:
     printf("GE ");
     break;
   case InstGEp:
-    printf("GE (");
+    printf("GE( ");
     break;
   case InstEQ:
     printf("EQ ");
     break;
   case InstEQp:
-    printf("EQ (");
+    printf("EQ( ");
     break;
   case InstNE:
     printf("NE ");
     break;
   case InstNEp:
-    printf("NE (");
+    printf("NE( ");
     break;
   case InstLT:
     printf("LT ");
     break;
   case InstLTp:
-    printf("LT (");
+    printf("LT( ");
     break;
   case InstLE:
     printf("LE ");
     break;
   case InstLEp:
-    printf("LE (");
+    printf("LE( ");
     break;
   case InstCTU:
     printf("CTU ");
@@ -263,6 +264,12 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstTP:
     printf("TP ");
   break;
+  case InstRTRIGGER:
+    printf("RTRIGGER ");
+  break;
+  case InstFTRIGGER:
+    printf("FTRIGGER ");
+    break;
   case Instq:
     printf(") ");
     break;
@@ -399,12 +406,29 @@ void printProgramInHEX(uint8_t *program, uint16_t size) {
   printf("}\n");
 }
 
+/**
+ * Reads the inputs from a file.
+ * 
+ * @param data The data structure to read the inputs into.
+ * @param filename The name of the file to read the inputs from.
+*/
+void readInputsfromFile(Data *data, const char *filename) {
+  FILE *file = fopen(filename, "r");
+  if (file == NULL) {
+    printf("Error opening file %s\n", filename);
+    return;
+  }
+  for (uint16_t i = 0; i < InputSize; i++) {
+    fscanf(file, "%X", &data->Inputs[i]);
+  }
+  fclose(file);
+}
+
 int main() {
   // Stack initalization
-  Stackb stackb;
-  initStackb(&stackb);
+  Stack stack;
+  initStack(&stack);
 
-  const char *filename = "..//VMcompiler//program.bin";
   // timer initialization
   Timer timers[MAX_TIMERS];
   initializeTimer(timers, sizeof(timers)/ sizeof(*timers));
@@ -414,8 +438,17 @@ int main() {
   initializeCounter(counters, sizeof(counters)/ sizeof(*counters));
   // trigger initialization
   Trigger triggers[MAX_TRIGGERS];
-  initializeTrigger(triggers, sizeof(triggers)/ sizeof(*triggers));  
+  initializeTrigger(triggers, sizeof(triggers)/ sizeof(*triggers));
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // Testing
+  /////////////////////////////////////////////////////////////////////////////////////// 
+
+  // #define Prati
+  #define Kerschbaumer 
   
+  #ifdef Kerschbaumer
+  const char *filename = "..//VMcompiler//program.bin";
   // dynamically allocate a buffer to store the program
   uint16_t fileSize = getProgramSizeFromFile(filename);
   uint8_t *program = (uint8_t *)malloc(fileSize);
@@ -429,15 +462,17 @@ int main() {
     printf("Error reading the program from file\n");
     return 0;
   }
+  #endif // End of Kerschbaumer
 
   Data data;
   uint16_t bufPos = 2;
   uint16_t programSize = 0;
-
-
-initializeMemory(&data,timers,counters,triggers,&stackb);
  
-  /*
+  initializeMemory(&data,timers,counters,triggers,&stack);
+
+  #ifdef Prati
+  uint8_t program[1000];// = (uint8_t *)malloc(fileSize);
+    
   // Test program
   // LD IX0.0
   Operand operand[10];
@@ -445,11 +480,11 @@ initializeMemory(&data,timers,counters,triggers,&stackb);
   operand[1] = {X, I, 0, 0};
   operand[2] = {X, I, 0, 0};
   uint64_t Kn[10];
- 
+
   Kn[0] = 0x0000000000000000;
   Kn[1] = 0x0000000000000000;
   Kn[2] = 0x0000000000000000;
-  
+
   bufPos = encodeInstruction(program, bufPos, InstLD, operand, Kn);
   // AND IX0.1
   operand[0] = {X, I, 1, 0};
@@ -463,9 +498,9 @@ initializeMemory(&data,timers,counters,triggers,&stackb);
   // ST QX0.0
   operand[0] = {X, Q, 0, 0};
   bufPos = encodeInstruction(program, bufPos, InstST, operand, Kn);
-  // AND( IX0.3
-  operand[0] = {X, I, 3, 0};
-  bufPos = encodeInstruction(program, bufPos, InstANDp, operand, Kn);
+  // OR( IX0.5
+  operand[0] = {X, I, 5, 0};
+  bufPos = encodeInstruction(program, bufPos, InstORp, operand, Kn);
   // OR IX0.4
   operand[0] = {X, I, 4, 0};
   bufPos = encodeInstruction(program, bufPos, InstOR, operand, Kn);
@@ -474,12 +509,21 @@ initializeMemory(&data,timers,counters,triggers,&stackb);
   // LD IX0.0
   operand[0] = {X, I, 0, 0};
   bufPos = encodeInstruction(program, bufPos, InstLD, operand, Kn);
+/*
+  // RTRIGGER
+  operand[0] = {B, K, 0, 0};
+  Kn[0]=2;
+  operand[1] = {X, I, 7, 0};
+  operand[2] = {X, Q, 7, 3};
+  bufPos = encodeInstruction(program, bufPos, InstRTRIGGER, operand, Kn);
+*/  
   // mov KX1 MX0.0
   operand[0] = {R, K, 0, 0};
   operand[1] = {R, M, 0, 0};
   Kn[0] = 0x4608f47e; // 8765.1234
   bufPos = encodeInstruction(program, bufPos, InstMOV, operand, Kn);
-  // Timer (k2,MX8.3,MW2,K1,Q0.3)
+    
+  /*  // Timer (k2,MX8.3,MW2,K1,Q0.3)
     operand[0] = {B, K, 0, 0};
     Kn[0]=2;
     operand[1] = {X, I, 0, 0};
@@ -494,6 +538,8 @@ initializeMemory(&data,timers,counters,triggers,&stackb);
     bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
     bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
     bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
+  */
+/*  
     //counter (k3, IX0.0, k4,IX0.7,q0.6)
     operand[0] = {B, K, 0, 0};
     Kn[0]=2;
@@ -511,35 +557,56 @@ initializeMemory(&data,timers,counters,triggers,&stackb);
     bufPos = encodeInstruction(program, bufPos, InstCTD, operand, Kn);
    operand[1] = {X, I, 7, 0};
     bufPos = encodeInstruction(program, bufPos, InstCTD, operand, Kn);
-   
+*/
+  
+  
   programSize = bufPos; // including the 2 bytes for the program size
   program[0] = (uint8_t)(programSize >> 8) & 0xFF;
   program[1] = (uint8_t)programSize & 0xFF;
 
-  encodeProgramCS(program);
-  */
-
-  // Set the inputs
-  data.Inputs[0] = 0b00000001;
+  encodeProgramCS(program); 
+  
+   // Set the inputs
+  data.Inputs[0] = 0b00001111;
   data.Inputs[1] = 0b00000001;
   data.Inputs[2] = 0b00000000;
+  
+  #endif // End of Prati
+
+
 
   // Run the program
   if(verifyProgramIntegrity(program) != noError) {
     printf("Program integrity error\n");
     return 1;
   }
-  bufPos = 2;
+  
   printMemory(&data);
   programSize = getProgramSize(program);
-  while (bufPos < programSize) {
-    Instruction instr = readInstruction(program, &bufPos);
-    printInstruction(instr, program);
-    executeInstruction(program, instr, &data);
-    printMemory(&data);
+  char c=0;
+
+  while (c != 'q')
+  {
+    bufPos = 2;
+    data.accumulator = 0;    
+    #ifdef Kerschbaumer
+      readInputsfromFile(&data, "inputs.txt");
+    #endif // End of Kerschbaumer
+
+    while (bufPos < programSize) {
+      Instruction instr = readInstruction(program, &bufPos);
+      printInstruction(instr, program);
+      executeInstruction(program, instr, &data);
+      printMemory(&data);      
+      }
+    printf("Press 'q <enter>' to quit, or '<enter>' to continue\n");
+    printf("######################################################################\n");
+    c = getchar();
   }
-  printProgramInHEX(program, programSize+4);
-  printf("Size = %d\n", programSize);
+  
+ 
+  //printProgramInHEX(program, programSize+4);
+  //printf("Size = %d\n", programSize);
   //free(program);
   //getchar();
 

@@ -112,8 +112,8 @@
 #define NumOpTOF 5
 #define NumOpq 0
 #define NumOpTP 5 
-#define NumOpRTRIGGER 2 
-#define NumOpFTRIGGER 2
+#define NumOpRTRIGGER 3 
+#define NumOpFTRIGGER 3
 
 // Memory types
 #define X 0 // Bit
@@ -160,7 +160,7 @@ typedef struct stInstruction {
 } Instruction;
 
 uint8_t getNumOp(uint8_t inst);
-void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stackb *astack);
+void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stack *astack);
 void executeInstruction(uint8_t *buffer, Instruction instr, Data *data);
 Instruction readInstruction(uint8_t *buffer, uint16_t *position);
 uint16_t getProgramSize(uint8_t *buffer);

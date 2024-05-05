@@ -699,6 +699,15 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstTOF:
     printf("TOF ");
     break;
+  case InstTP:
+    printf("TP ");
+  break;
+  case InstRTRIGGER:
+    printf("RTRIGGER ");
+  break;
+  case InstFTRIGGER:
+    printf("FTRIGGER ");
+    break;
   case Instq:
     printf(") ");
     break;
@@ -757,7 +766,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("ML%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%d ", (int64_t)((uint64_t)program[instr.operands[i].address]
+        printf("KD%ld ", (int64_t)((uint64_t)program[instr.operands[i].address]
                         <<56 | (uint64_t)program[instr.operands[i].address+1]<<48 |
                         (uint64_t)program[instr.operands[i].address+2]<<40 |
                         (uint64_t)program[instr.operands[i].address+3]<<32 |
@@ -894,7 +903,6 @@ Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
   return instr;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 // Main function
 ///////////////////////////////////////////////////////////////////////////////////
@@ -970,6 +978,7 @@ int main() {
   fwrite(outBuffer, 1, outBufPos+4, file);
   fclose(file);
 
-  printf("\nCompiled successfully\n\n");
+  printf("\nCompiled successfully");
+  printProgramInHEX(outBuffer, outBufPos+4);
   return 0;
 }

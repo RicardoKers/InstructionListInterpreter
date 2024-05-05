@@ -92,8 +92,8 @@ The implemented instructions are as follows:
 45 TOF (Timer Off Delay): TOF operand;
 46 ) (close parentheses): ); "Stract instruction from stack";
 47 TP (Timer Pulse)
-48 R_TRIGGER (Rising edge detection) R_TRIGGER (IN, QO)
-49 F_TRIGGER (Falling edge detection) F_TRIGGER (IN, QO)
+48 R_TRIGGER (Rising edge detection) R_TRIGGER (ntrigger,IN, QO)
+49 F_TRIGGER (Falling edge detection) F_TRIGGER (ntrigger,IN, QO)
 */
 
 #include "VM.h"
@@ -101,9 +101,9 @@ The implemented instructions are as follows:
 #include "timer.h"
 #include "counter.h"
 #include "trigger.h"
-
-StackElementb poppedElement;
-Stackb *stackb;
+#include <stdio.h>
+StackElement poppedElement;
+Stack *stack;
 Timer *timers;
 Counter *counters;
 Trigger *triggers;
@@ -919,10 +919,13 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
             data->accumulator & getBitFormAddress(data->Memories,
                                                   instr.operands[0].address,
                                                   instr.operands[0].bitNumber);
+    } else if(instr.operands[0].memorytype == B &&  instr.operands[0].registertype == K){
+      data->accumulator =
+        data->accumulator & operandValueToInt8(&instr.operands[0], buffer, data);
     }
     break;
   case InstANDp:
-    pushb(stackb, InstANDp, data->accumulator);
+    push(stack, InstANDp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -957,10 +960,13 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
             data->accumulator &
             (getBitFormAddress(data->Memories, instr.operands[0].address,
                                instr.operands[0].bitNumber) == 0 ? 1 : 0);
+    } else if(instr.operands[0].memorytype == B &&  instr.operands[0].registertype == K){
+      data->accumulator =
+        data->accumulator & (operandValueToInt8(&instr.operands[0], buffer, data) == 0 ? 1 : 0);
     }
     break;
   case InstANDNp:
-    pushb(stackb, InstANDNp, data->accumulator);
+    push(stack, InstANDNp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -995,10 +1001,13 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
             data->accumulator |
             getBitFormAddress(data->Memories, instr.operands[0].address,
                               instr.operands[0].bitNumber);
+    } else if(instr.operands[0].memorytype == B &&  instr.operands[0].registertype == K){
+      data->accumulator =
+        data->accumulator | operandValueToInt8(&instr.operands[0], buffer, data);
     }
     break;
   case InstORp:
-    pushb(stackb, InstORp, data->accumulator);
+    push(stack, InstORp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1039,10 +1048,13 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
                                instr.operands[0].bitNumber) == 0
                  ? 1
                  : 0);
+    } else if(instr.operands[0].memorytype == B &&  instr.operands[0].registertype == K){
+      data->accumulator =
+        data->accumulator | (operandValueToInt8(&instr.operands[0], buffer, data) == 0 ? 1 : 0);
     }
     break;
   case InstORNp:
-    pushb(stackb, InstORNp, data->accumulator);
+    push(stack, InstORNp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1077,10 +1089,13 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
             data->accumulator ^ getBitFormAddress(data->Memories,
                                                   instr.operands[0].address,
                                                   instr.operands[0].bitNumber);
+    }else if(instr.operands[0].memorytype == B &&  instr.operands[0].registertype == K){
+      data->accumulator =
+        data->accumulator ^ operandValueToInt8(&instr.operands[0], buffer, data);
     }
     break;
   case InstXORp:
-    pushb(stackb, InstXORp, data->accumulator);
+    push(stack, InstXORp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1121,10 +1136,13 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
                                instr.operands[0].bitNumber) == 0
                  ? 1
                  : 0);
+    }else if(instr.operands[0].memorytype == B &&  instr.operands[0].registertype == K){
+      data->accumulator =
+        data->accumulator ^ (operandValueToInt8(&instr.operands[0], buffer, data) == 0 ? 1 : 0);
     }
     break;
   case InstXORNp:
-    pushb(stackb, InstXORNp, data->accumulator);
+    push(stack, InstXORNp, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1579,32 +1597,47 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
   case InstLEp:
     break;
   case Instq:
-    popb(stackb, &poppedElement);
-    switch (poppedElement.instruction) {
-    case InstANDp:
-      data->accumulator = data->accumulator & poppedElement.value;
-      break;
-    case InstANDNp:
-      data->accumulator =
-          (data->accumulator & poppedElement.value) == 0 ? 1 : 0;
-      break;
-    case InstORp:
-      data->accumulator = data->accumulator | poppedElement.value;
-      break;
-    case InstORNp:
-      data->accumulator =
-          (data->accumulator | poppedElement.value) == 0 ? 1 : 0;
-      break;
-    case InstXORp:
-      data->accumulator = data->accumulator ^ poppedElement.value;
-      break;
-    case InstXORNp:
-      data->accumulator =
-          (data->accumulator ^ poppedElement.value) == 0 ? 1 : 0;
-      break;
-    default:
-      break;
+    pop(stack, &poppedElement);
+    if(poppedElement.instruction == InstAND ||poppedElement.instruction == InstOR ||
+      poppedElement.instruction == InstANDN ||poppedElement.instruction == InstORN ||
+      poppedElement.instruction == InstXOR ||poppedElement.instruction == InstXORN ){
+        uint8_t lbuffer[2];
+        uint8_t nop;
+        nop=getNumOp(poppedElement.instruction); 
+        Operand ops[MaxOpers];
+        ops[0]={B,K,0,0};
+        Instruction in;
+        in = {poppedElement.instruction,nop,{*ops}};
+        lbuffer[0] = poppedElement.value;
+        lbuffer[1] = 0;
+        executeInstruction(lbuffer,in, data);
     }
+    /*
+    switch (poppedElement.instruction) {
+      case InstANDp:
+        data->accumulator = data->accumulator & poppedElement.value;
+        break;
+      case InstANDNp:
+        data->accumulator =
+            (data->accumulator & poppedElement.value) == 0 ? 1 : 0;
+        break;
+      case InstORp:
+        data->accumulator = data->accumulator | poppedElement.value;
+        break;
+      case InstORNp:
+        data->accumulator =
+            (data->accumulator | poppedElement.value) == 0 ? 1 : 0;
+        break;
+      case InstXORp:
+        data->accumulator = data->accumulator ^ poppedElement.value;
+        break;
+      case InstXORNp:
+        data->accumulator =
+            (data->accumulator ^ poppedElement.value) == 0 ? 1 : 0;
+        break;
+      default:
+        break;
+    }*/
     break;
   case InstTON: // TON(ntimer, IN, ticks, prescaler, OUT) Example TON(K5,
                 // IX0.0, K10,K1,QX0.1
@@ -1880,7 +1913,69 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
                       instr.operands[4].bitNumber, counters[temp8].QO);
     }
     break;
-  // TODO:  CTU, CTD, TON, TOF etc
+  case InstRTRIGGER://R_TRIGGER (ntrigger,IN, QO)
+    temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+    if (instr.operands[1].registertype == I) {
+      triggers[temp8].CLK =
+          (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == M) {
+      triggers[temp8].CLK =
+          (getBitFormAddress(data->Memories, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    } else if (instr.operands[1].registertype == Q) {
+      triggers[temp8].CLK =
+          (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                             instr.operands[1].bitNumber) == 0
+               ? 0
+               : 1);
+    }
+    runRTrigger(&triggers[temp8]);
+
+    if (instr.operands[2].registertype == Q) {
+      setBitInAddress(data->Outputs, instr.operands[2].address,
+                      instr.operands[2].bitNumber, triggers[temp8].QO);
+    } else if (instr.operands[2].registertype == M) {
+      setBitInAddress(data->Memories, instr.operands[2].address,
+                      instr.operands[2].bitNumber, triggers[temp8].QO);
+    }
+    break;
+
+    case InstFTRIGGER://R_TRIGGER (ntrigger,IN, QO)
+      temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+      if (instr.operands[1].registertype == I) {
+        triggers[temp8].CLK =
+            (getBitFormAddress(data->Inputs, instr.operands[1].address,
+                               instr.operands[1].bitNumber) == 0
+                 ? 0
+                 : 1);
+      } else if (instr.operands[1].registertype == M) {
+        triggers[temp8].CLK =
+            (getBitFormAddress(data->Memories, instr.operands[1].address,
+                               instr.operands[1].bitNumber) == 0
+                 ? 0
+                 : 1);
+      } else if (instr.operands[1].registertype == Q) {
+        triggers[temp8].CLK =
+            (getBitFormAddress(data->Outputs, instr.operands[1].address,
+                               instr.operands[1].bitNumber) == 0
+                 ? 0
+                 : 1);
+      }
+      runFTrigger(&triggers[temp8]);
+      if (instr.operands[2].registertype == Q) {
+        setBitInAddress(data->Outputs, instr.operands[2].address,
+                        instr.operands[2].bitNumber, triggers[temp8].QO);
+      } else if (instr.operands[2].registertype == M) {
+        setBitInAddress(data->Memories, instr.operands[2].address,
+                        instr.operands[2].bitNumber, triggers[temp8].QO);
+      }
+      break;
+    // TODO:  CTU, CTD, TON, TOF etc
   default:
     break;
   }
@@ -1891,7 +1986,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
  *
  * @param data The data structure containing the memory and register values.
  */
-void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stackb *astack) {
+void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stack *astack) {
   for (uint16_t i = 0; i < MemorySize; i++) {
     data->Memories[i] = 0;
   }
@@ -1905,7 +2000,7 @@ void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *a
   timers = atimers;
   counters = acounters;
   triggers = atriggers;
-  stackb = astack;
+  stack = astack;
 }
 
 /**
