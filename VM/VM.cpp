@@ -91,9 +91,9 @@ The implemented instructions are as follows:
 44 TON (Timer On Delay): TON(ntimer, IN, PT, prescaler, OUT); Example TON(K5, IX0.0, 10,1,QX0.1) //aqui
 45 TOF (Timer Off Delay): TOF operand;
 46 ) (close parentheses): ); "Stract instruction from stack";
-47 TP (Timer Pulse)
-48 R_TRIGGER (Rising edge detection) R_TRIGGER (ntrigger,IN, QO)
-49 F_TRIGGER (Falling edge detection) F_TRIGGER (ntrigger,IN, QO)
+47 TP (Timer Pulse);
+48 R_TRIGGER (Rising edge detection) R_TRIGGER (ntrigger,IN, QO);
+49 F_TRIGGER (Falling edge detection) F_TRIGGER (ntrigger,IN, QO);
 */
 
 #include "VM.h"
@@ -899,9 +899,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstMOVp:
-    // TODO: add stack support
-    break;
   case InstAND:
     if (instr.operands[0].memorytype == X) {
       if (instr.operands[0].registertype == I)
@@ -925,7 +922,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstANDp:
-    push(stack, InstANDp, data->accumulator);
+    push(stack, InstAND, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -966,7 +963,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstANDNp:
-    push(stack, InstANDNp, data->accumulator);
+    push(stack, InstANDN, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1007,7 +1004,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstORp:
-    push(stack, InstORp, data->accumulator);
+    push(stack, InstOR, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1054,7 +1051,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstORNp:
-    push(stack, InstORNp, data->accumulator);
+    push(stack, InstORN, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1095,7 +1092,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstXORp:
-    push(stack, InstXORp, data->accumulator);
+    push(stack, InstXOR, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1142,7 +1139,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstXORNp:
-    push(stack, InstXORNp, data->accumulator);
+    push(stack, InstXORN, data->accumulator);
     if (instr.num_operands == 1) {
       if (instr.operands[0].memorytype == X) {
         if (instr.operands[0].registertype == I)
@@ -1162,10 +1159,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     break;
   case InstNOT:
     data->accumulator = data->accumulator == 0 ? 1 : 0;
-    break;
-  case InstNOTp:
-    // TODO: add stack support
-    // Not included in IEC61131-3
     break;
   case InstADD:
     if (data->accumulator == 1) {
@@ -1227,8 +1220,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstADDp:
-    break;
   case InstSUB:
     if (data->accumulator == 1) {
       if (instr.operands[2].memorytype == X) {
@@ -1288,8 +1279,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
                                  *(uint32_t *)&tempf);
       }
     }
-    break;
-  case InstSUBp:
     break;
   case InstMUL:
     if (data->accumulator == 1) {
@@ -1351,8 +1340,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstMULp:
-    break;
   case InstDIV:
     if (data->accumulator == 1) {
       if (instr.operands[2].memorytype == X) {
@@ -1413,8 +1400,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstDIVp:
-    break;
   case InstGT:
     if (data->accumulator == 1) {
       if (instr.operands[1].memorytype == X) {
@@ -1444,8 +1429,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstGTp:
-    break;
   case InstGE:
     if (data->accumulator == 1) {
       if (instr.operands[1].memorytype == X) {
@@ -1473,8 +1456,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
         data->accumulator = (tempf >= operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
       }
     }
-    break;
-  case InstGEp:
     break;
   case InstEQ:
     if (data->accumulator == 1) {
@@ -1504,8 +1485,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstEQp:
-    break;
   case InstNE:
     if (data->accumulator == 1) {
       if (instr.operands[1].memorytype == X) {
@@ -1533,8 +1512,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
         data->accumulator = (tempf != operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
       }
     }
-    break;
-  case InstNEp:
     break;
   case InstLT:
     if (data->accumulator == 1) {
@@ -1564,8 +1541,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
       }
     }
     break;
-  case InstLTp:
-    break;
   case InstLE:
       if (data->accumulator == 1) {
       if (instr.operands[1].memorytype == X) {
@@ -1593,8 +1568,6 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
         data->accumulator = (tempf <= operandValueToFloat(&instr.operands[1], buffer, data) ? 1 : 0);
       }
     }
-    break;
-  case InstLEp:
     break;
   case Instq:
     pop(stack, &poppedElement);

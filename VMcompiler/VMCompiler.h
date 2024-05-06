@@ -108,8 +108,8 @@
 #define NumOpTOF 5
 #define NumOpq 0
 #define NumOpTP 5 
-#define NumOpRTRIGGER 2 
-#define NumOpFTRIGGER 2
+#define NumOpRTRIGGER 3 
+#define NumOpFTRIGGER 3
 
 // instruction names
 const char *InstNames[] = {

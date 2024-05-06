@@ -109,7 +109,7 @@ uint8_t readProgramFromFile(const char *filename, uint8_t *buffer) {
   uint16_t i = 0;
   int c;
   while ((c = fgetc(file)) != EOF) {
-    buffer[i] = c;
+    buffer[i] = (uint8_t)c;
     i++;
   }
   fclose(file);
@@ -328,7 +328,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("ML%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%ld ", (int64_t)((uint64_t)program[instr.operands[i].address]
+        printf("KD%lld ", (int64_t)((uint64_t)program[instr.operands[i].address]
                         <<56 | (uint64_t)program[instr.operands[i].address+1]<<48 |
                         (uint64_t)program[instr.operands[i].address+2]<<40 |
                         (uint64_t)program[instr.operands[i].address+3]<<32 |
@@ -414,12 +414,14 @@ void printProgramInHEX(uint8_t *program, uint16_t size) {
 */
 void readInputsfromFile(Data *data, const char *filename) {
   FILE *file = fopen(filename, "r");
+  unsigned int tmp;
   if (file == NULL) {
     printf("Error opening file %s\n", filename);
     return;
   }
   for (uint16_t i = 0; i < InputSize; i++) {
-    fscanf(file, "%X", &data->Inputs[i]);
+    fscanf(file, "%X", &tmp);
+    data->Inputs[i]=(uint8_t)tmp;
   }
   fclose(file);
 }
@@ -450,7 +452,7 @@ int main() {
   #ifdef Kerschbaumer
   const char *filename = "..//VMcompiler//program.bin";
   // dynamically allocate a buffer to store the program
-  uint16_t fileSize = getProgramSizeFromFile(filename);
+  uint32_t fileSize = getProgramSizeFromFile(filename);
   uint8_t *program = (uint8_t *)malloc(fileSize);
   if (program == NULL) {
     printf("Error allocating memory for the program\n");
@@ -583,12 +585,13 @@ int main() {
   
   printMemory(&data);
   programSize = getProgramSize(program);
-  char c=0;
+  int c=0;
 
   while (c != 'q')
   {
     bufPos = 2;
     data.accumulator = 0;    
+
     #ifdef Kerschbaumer
       readInputsfromFile(&data, "inputs.txt");
     #endif // End of Kerschbaumer
@@ -603,8 +606,7 @@ int main() {
     printf("######################################################################\n");
     c = getchar();
   }
-  
- 
+   
   //printProgramInHEX(program, programSize+4);
   //printf("Size = %d\n", programSize);
   //free(program);
