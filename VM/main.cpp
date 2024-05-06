@@ -144,9 +144,6 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstMOV:
     printf("MOV ");
     break;
-  case InstMOVp:
-    printf("MOV( ");
-    break;
   case InstAND:
     printf("AND ");
     break;
@@ -186,68 +183,38 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstNOT:
     printf("NOT ");
     break;
-  case InstNOTp:
-    printf("NOT( ");
-    break;
   case InstADD:
     printf("ADD ");
-    break;
-  case InstADDp:
-    printf("ADD( ");
     break;
   case InstSUB:
     printf("SUB ");
     break;
-  case InstSUBp:
-    printf("SUB( ");
-    break;
   case InstMUL:
     printf("MUL ");
-    break;
-  case InstMULp:
-    printf("MUL( ");
     break;
   case InstDIV:
     printf("DIV ");
     break;
-  case InstDIVp:
-    printf("DIV( ");
+  case InstMOD:
+    printf("MOD ");
     break;
   case InstGT:
     printf("GT ");
     break;
-  case InstGTp:
-    printf("GT( ");
-    break;
   case InstGE:
     printf("GE ");
-    break;
-  case InstGEp:
-    printf("GE( ");
     break;
   case InstEQ:
     printf("EQ ");
     break;
-  case InstEQp:
-    printf("EQ( ");
-    break;
   case InstNE:
     printf("NE ");
-    break;
-  case InstNEp:
-    printf("NE( ");
     break;
   case InstLT:
     printf("LT ");
     break;
-  case InstLTp:
-    printf("LT( ");
-    break;
   case InstLE:
     printf("LE ");
-    break;
-  case InstLEp:
-    printf("LE( ");
     break;
   case InstCTU:
     printf("CTU ");

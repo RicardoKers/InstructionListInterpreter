@@ -88,9 +88,6 @@ uint8_t getNumOp(uint8_t inst) {
   case InstMOV:
       return NumOpMOV;
     break;
-  case InstMOVp:
-      return NumOpMOVp;
-    break;
   case InstAND:
       return NumOpAND;
     break;
@@ -130,68 +127,38 @@ uint8_t getNumOp(uint8_t inst) {
   case InstNOT:
       return NumOpNOT;
     break;
-  case InstNOTp:
-      return NumOpNOTp;
-    break;
   case InstADD:
       return NumOpADD;
-    break;
-  case InstADDp:
-      return NumOpADDp;
     break;
   case InstSUB:
       return NumOpSUB;
     break;
-  case InstSUBp:
-      return NumOpSUBp;
-    break;
   case InstMUL:
       return NumOpMUL;
-    break;
-  case InstMULp:
-      return NumOpMULp;
     break;
   case InstDIV:
       return NumOpDIV;
     break;
-  case InstDIVp:
-      return NumOpDIVp;
+  case InstMOD:
+      return NumOpMOD;
     break;
   case InstGT:
       return NumOpGT;
     break;
-  case InstGTp:
-      return NumOpGTp;
-    break;
   case InstGE:
       return NumOpGE;
-    break;
-  case InstGEp:
-      return NumOpGEp;
     break;
   case InstEQ:
       return NumOpEQ;
     break;
-  case InstEQp:
-      return NumOpEQp;
-    break;
   case InstNE:
       return NumOpNE;
-    break;
-  case InstNEp:
-      return NumOpNEp;
     break;
   case InstLT:
       return NumOpLT;
     break;
-  case InstLTp:
-      return NumOpLTp;
-    break;
   case InstLE:
       return NumOpLE;
-    break;
-  case InstLEp:
-      return NumOpLEp;
     break;
   case InstCTU:
       return NumOpCTU;
@@ -468,7 +435,7 @@ uint8_t verifyInstruction(Instruction *inst) {
       printf("\tWarning: operands with different memory types\n");
       ret = warning;
     }
-    if((inst->opcode == InstMOV || inst->opcode == InstMOVp) && inst->operands[1].registertype == K) {
+    if((inst->opcode == InstMOV) && inst->operands[1].registertype == K) {
       printf("Error: cannot change a constant value\n");
       return criticalError;
     }
@@ -582,9 +549,6 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstMOV:
     printf("MOV ");
     break;
-  case InstMOVp:
-    printf("MOV( ");
-    break;
   case InstAND:
     printf("AND ");
     break;
@@ -624,68 +588,38 @@ void printInstruction(Instruction instr, uint8_t *program) {
   case InstNOT:
     printf("NOT ");
     break;
-  case InstNOTp:
-    printf("NOT( ");
-    break;
   case InstADD:
     printf("ADD ");
-    break;
-  case InstADDp:
-    printf("ADD( ");
     break;
   case InstSUB:
     printf("SUB ");
     break;
-  case InstSUBp:
-    printf("SUB( ");
-    break;
   case InstMUL:
     printf("MUL ");
-    break;
-  case InstMULp:
-    printf("MUL( ");
     break;
   case InstDIV:
     printf("DIV ");
     break;
-  case InstDIVp:
-    printf("DIV( ");
+  case InstMOD:
+    printf("MOD ");
     break;
   case InstGT:
     printf("GT ");
     break;
-  case InstGTp:
-    printf("GT( ");
-    break;
   case InstGE:
     printf("GE ");
-    break;
-  case InstGEp:
-    printf("GE( ");
     break;
   case InstEQ:
     printf("EQ ");
     break;
-  case InstEQp:
-    printf("EQ( ");
-    break;
   case InstNE:
     printf("NE ");
-    break;
-  case InstNEp:
-    printf("NE( ");
     break;
   case InstLT:
     printf("LT ");
     break;
-  case InstLTp:
-    printf("LT( ");
-    break;
   case InstLE:
     printf("LE ");
-    break;
-  case InstLEp:
-    printf("LE( ");
     break;
   case InstCTU:
     printf("CTU ");

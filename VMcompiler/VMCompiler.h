@@ -15,49 +15,38 @@
 #define InstS 4
 #define InstR 5
 #define InstMOV 6
-#define InstMOVp 7
-#define InstAND 8
-#define InstANDp 9
-#define InstANDN 10
-#define InstANDNp 11
-#define InstOR 12
-#define InstORp 13
-#define InstORN 14
-#define InstORNp 15
-#define InstXOR 16
-#define InstXORp 17
-#define InstXORN 18
-#define InstXORNp 19
-#define InstNOT 20
-#define InstNOTp 21
-#define InstADD 22
-#define InstADDp 23
-#define InstSUB 24
-#define InstSUBp 25
-#define InstMUL 26
-#define InstMULp 27
-#define InstDIV 28
-#define InstDIVp 29
-#define InstGT 30
-#define InstGTp 31
-#define InstGE 32
-#define InstGEp 33
-#define InstEQ 34
-#define InstEQp 35
-#define InstNE 36
-#define InstNEp 37
-#define InstLT 38
-#define InstLTp 39
-#define InstLE 40
-#define InstLEp 41
-#define InstCTU 42
-#define InstCTD 43
-#define InstTON 44
-#define InstTOF 45
-#define Instq 46
-#define InstTP 47
-#define InstRTRIGGER 48 
-#define InstFTRIGGER 49 
+#define InstAND 7
+#define InstANDp 8
+#define InstANDN 9
+#define InstANDNp 10
+#define InstOR 11
+#define InstORp 12
+#define InstORN 13
+#define InstORNp 14
+#define InstXOR 15
+#define InstXORp 16
+#define InstXORN 17
+#define InstXORNp 18
+#define InstNOT 19
+#define InstADD 20
+#define InstSUB 21
+#define InstMUL 22
+#define InstDIV 23
+#define InstMOD 24
+#define InstGT 25
+#define InstGE 26
+#define InstEQ 27
+#define InstNE 28
+#define InstLT 29
+#define InstLE 30
+#define InstCTU 31
+#define InstCTD 32
+#define InstTON 33
+#define InstTOF 34
+#define Instq 35
+#define InstTP 36
+#define InstRTRIGGER 37 
+#define InstFTRIGGER 38 
 
 // Number of operands
 #define NumOpLD 1
@@ -67,7 +56,6 @@
 #define NumOpS 1
 #define NumOpR 1
 #define NumOpMOV 2
-#define NumOpMOVp 2
 #define NumOpAND 1
 #define NumOpANDp 1
 #define NumOpANDN 1
@@ -81,27 +69,17 @@
 #define NumOpXORN 1
 #define NumOpXORNp 1
 #define NumOpNOT 0
-#define NumOpNOTp 0
 #define NumOpADD 3
-#define NumOpADDp 3
 #define NumOpSUB 3
-#define NumOpSUBp 3
 #define NumOpMUL 3
-#define NumOpMULp 3
 #define NumOpDIV 3
-#define NumOpDIVp 3
+#define NumOpMOD 3
 #define NumOpGT 2
-#define NumOpGTp 2
 #define NumOpGE 2
-#define NumOpGEp 2
 #define NumOpEQ 2
-#define NumOpEQp 2
 #define NumOpNE 2
-#define NumOpNEp 2
 #define NumOpLT 2
-#define NumOpLTp 2
 #define NumOpLE 2
-#define NumOpLEp 2
 #define NumOpCTU 5
 #define NumOpCTD 5
 #define NumOpTON 5
@@ -120,7 +98,6 @@ const char *InstNames[] = {
   "S",
   "R",
   "MOV",
-  "MOV(",
   "AND",
   "AND(",
   "ANDN",
@@ -134,27 +111,17 @@ const char *InstNames[] = {
   "XORN",
   "XORN(",
   "NOT",
-  "NOT(",
   "ADD",
-  "ADD(",
   "SUB",
-  "SUB(",
   "MUL",
-  "MUL(",
   "DIV",
-  "DIV(",
+  "MOD",
   "GT",
-  "GT(",
   "GE",
-  "GE(",
   "EQ",
-  "EQ(",
   "NE",
-  "NE(",
   "LT",
-  "LT(",
   "LE",
-  "LE(",
   "CTU",
   "CTD",
   "TON",
@@ -165,7 +132,7 @@ const char *InstNames[] = {
   "FTRIGGER" 
 };
 
-#define NumInstructions 50
+#define NumInstructions 39
 
 // Memory types
 #define X 0 // Bit

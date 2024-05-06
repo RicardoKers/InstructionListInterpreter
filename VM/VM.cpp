@@ -51,49 +51,38 @@ The implemented instructions are as follows:
 4 S (Set): S destination;
 5 R (Reset): R destination;
 6 MOV (Move): MOV source, destination;
-7 MOV( (Move, open parentheses): MOV( source, destination;
-8 AND (Logical AND): AND operand;
-9 AND( (Logical AND, open parentheses): AND( operand;
-10 ANDN (Logical AND Negated): ANDN operand;
-11 ANDN( (Logical AND Negated, open parentheses): ANDN( operand;
-12 OR (Logical OR): OR operand;
-13 OR( (Logical OR, open parentheses): OR( operand;
-14 ORN (Logical OR Negated): ORN operand;
-15 ORN( (Logical OR Negated, open parentheses): ORN( operand;
-16 XOR (Logical XOR): XOR operand;
-17 XOR( (Logical XOR, open parentheses): XOR( operand;
-18 XORN (Logical XOR Negated): XORN operand;
-19 XORN( (Logical XOR Negated, open parentheses): XORN( operand;
-20 NOT (Logical NOT): NOT;
-21 NOT( (Logical NOT, open parentheses): NOT(;
-22 ADD (Addition): ADD operand1, operand2, destination;
-23  ADD( (Addition, open parentheses): ADD( operand1, operand2, destination;
-24 SUB (Subtraction): SUB operand1, operand2, destination;
-25 SUB( (Subtraction, open parentheses): SUB( operand1, operand2, destination;
-26 MUL (Multiplication): MUL operand1, operand2, destination;
-27 MUL( (Multiplication, open parentheses): MUL( operand1, operand2, destination;
-28 DIV (Division): DIV operand1, operand2, destination;
-29 DIV( (Division, open parentheses): DIV( operand1, operand2, destination;
-30 GT (Greater Than): GT operand1, operand2;
-31 GT( (Greater Than, open parentheses): GT( operand1, operand2;
-32 GE (Greater or Equal): GE operand1, operand2;
-33 GE( (Greater or Equal, open parentheses): GE( operand1, operand2;
-34 EQ (Equal): EQ operand1, operand2;
-35 EQ( (Equal, open parentheses): EQ( operand1, operand2;
-36 NE (Not Equal): NE operand1, operand2;
-37 NE( (Not Equal, open parentheses): NE( operand1, operand2;
-38 LT (Less Than): LE operand1, operand2;
-39 LT( (Less Than, open parentheses): LE( operand1, operand2;
-40 LE (Less or Equal): LE operand1, operand2;
-41 LE( (Less or Equal, open parentheses): LE( operand1, operand2;
-42 CTU (Counter Up): CTU(ncouter, CO, PV, RST, OUT); //aqui
-43 CTD (Counter Down): CTD(ncouter, CO, PV, LD, OUT);
-44 TON (Timer On Delay): TON(ntimer, IN, PT, prescaler, OUT); Example TON(K5, IX0.0, 10,1,QX0.1) //aqui
-45 TOF (Timer Off Delay): TOF operand;
-46 ) (close parentheses): ); "Stract instruction from stack";
-47 TP (Timer Pulse);
-48 R_TRIGGER (Rising edge detection) R_TRIGGER (ntrigger,IN, QO);
-49 F_TRIGGER (Falling edge detection) F_TRIGGER (ntrigger,IN, QO);
+7 AND (Logical AND): AND operand;
+8 AND( (Logical AND, open parentheses): AND( operand;
+9 ANDN (Logical AND Negated): ANDN operand;
+10 ANDN( (Logical AND Negated, open parentheses): ANDN( operand;
+11 OR (Logical OR): OR operand;
+12 OR( (Logical OR, open parentheses): OR( operand;
+13 ORN (Logical OR Negated): ORN operand;
+14 ORN( (Logical OR Negated, open parentheses): ORN( operand;
+15 XOR (Logical XOR): XOR operand;
+16 XOR( (Logical XOR, open parentheses): XOR( operand;
+17 XORN (Logical XOR Negated): XORN operand;
+18 XORN( (Logical XOR Negated, open parentheses): XORN( operand;
+19 NOT (Logical NOT): NOT;
+20 ADD (Addition): ADD operand1, operand2, destination;
+21 SUB (Subtraction): SUB operand1, operand2, destination;
+22 MUL (Multiplication): MUL operand1, operand2, destination;
+23 DIV (Division): DIV operand1, operand2, destination;
+24 MOD (Remainder): MOD operand1, operand2, destination;
+25 GT (Greater Than): GT operand1, operand2;
+26 GE (Greater or Equal): GE operand1, operand2;
+27 EQ (Equal): EQ operand1, operand2;
+28 NE (Not Equal): NE operand1, operand2;
+29 LT (Less Than): LE operand1, operand2;
+30 LE (Less or Equal): LE operand1, operand2;
+31 CTU (Counter Up): CTU(ncouter, CO, PV, RST, OUT); //aqui
+32 CTD (Counter Down): CTD(ncouter, CO, PV, LD, OUT);
+33 TON (Timer On Delay): TON(ntimer, IN, PT, prescaler, OUT); Example TON(K5, IX0.0, 10,1,QX0.1) //aqui
+34 TOF (Timer Off Delay): TOF operand;
+35 ) (close parentheses): ); "Stract instruction from stack";
+36 TP (Timer Pulse);
+37 R_TRIGGER (Rising edge detection) R_TRIGGER (ntrigger,IN, QO);
+38 F_TRIGGER (Falling edge detection) F_TRIGGER (ntrigger,IN, QO);
 */
 
 #include "VM.h"
@@ -138,9 +127,6 @@ uint8_t getNumOp(uint8_t inst) {
   case InstMOV:
       return NumOpMOV;
     break;
-  case InstMOVp:
-      return NumOpMOVp;
-    break;
   case InstAND:
       return NumOpAND;
     break;
@@ -180,68 +166,38 @@ uint8_t getNumOp(uint8_t inst) {
   case InstNOT:
       return NumOpNOT;
     break;
-  case InstNOTp:
-      return NumOpNOTp;
-    break;
   case InstADD:
       return NumOpADD;
-    break;
-  case InstADDp:
-      return NumOpADDp;
     break;
   case InstSUB:
       return NumOpSUB;
     break;
-  case InstSUBp:
-      return NumOpSUBp;
-    break;
   case InstMUL:
       return NumOpMUL;
-    break;
-  case InstMULp:
-      return NumOpMULp;
     break;
   case InstDIV:
       return NumOpDIV;
     break;
-  case InstDIVp:
-      return NumOpDIVp;
+  case InstMOD:
+      return NumOpMOD;
     break;
   case InstGT:
       return NumOpGT;
     break;
-  case InstGTp:
-      return NumOpGTp;
-    break;
   case InstGE:
       return NumOpGE;
-    break;
-  case InstGEp:
-      return NumOpGEp;
     break;
   case InstEQ:
       return NumOpEQ;
     break;
-  case InstEQp:
-      return NumOpEQp;
-    break;
   case InstNE:
       return NumOpNE;
-    break;
-  case InstNEp:
-      return NumOpNEp;
     break;
   case InstLT:
       return NumOpLT;
     break;
-  case InstLTp:
-      return NumOpLTp;
-    break;
   case InstLE:
       return NumOpLE;
-    break;
-  case InstLEp:
-      return NumOpLEp;
     break;
   case InstCTU:
       return NumOpCTU;
@@ -1158,7 +1114,7 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
     }
     break;
   case InstNOT:
-    data->accumulator = data->accumulator == 0 ? 1 : 0;
+    data->accumulator = (data->accumulator == 0) ? 1 : 0;
     break;
   case InstADD:
     if (data->accumulator == 1) {
@@ -1398,6 +1354,57 @@ void executeInstruction(uint8_t *buffer, Instruction instr, Data *data) {
           setDoubleWordInAddress(data->Memories, instr.operands[2].address,
                                  *(uint32_t *)&tempf);
       }
+    }
+    break;
+  case InstMOD:
+    if (data->accumulator == 1) {
+      if (instr.operands[2].memorytype == X) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 % operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setBitInAddress(data->Outputs, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+        else if (instr.operands[2].registertype == M)
+          setBitInAddress(data->Memories, instr.operands[2].address,
+                          instr.operands[2].bitNumber, temp8);
+      }
+      if (instr.operands[2].memorytype == B) {
+        temp8 = operandValueToInt8(&instr.operands[0], buffer, data);
+        temp8 = temp8 % operandValueToInt8(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          data->Outputs[instr.operands[2].address] = (uint8_t)temp8;
+        else if (instr.operands[2].registertype == M)
+          data->Memories[instr.operands[2].address] = (uint8_t)temp8;
+      }
+      if (instr.operands[2].memorytype == W) {
+        temp16 = operandValueToInt16(&instr.operands[0], buffer, data);
+        temp16 = temp16 % operandValueToInt16(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setWordInAddress(data->Outputs, instr.operands[2].address, temp16);
+        else if (instr.operands[2].registertype == M)
+          setWordInAddress(data->Memories, instr.operands[2].address, temp16);
+      }
+      if (instr.operands[2].memorytype == D) {
+        temp32 = operandValueToInt32(&instr.operands[0], buffer, data);
+        temp32 = temp32 % operandValueToInt32(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setDoubleWordInAddress(data->Outputs, instr.operands[2].address,
+                                 temp32);
+        else if (instr.operands[2].registertype == M)
+          setDoubleWordInAddress(data->Memories, instr.operands[2].address,
+                                 temp32);
+      }
+      if (instr.operands[2].memorytype == L) {
+        temp64 = operandValueToInt64(&instr.operands[0], buffer, data);
+        temp64 = temp64 % operandValueToInt64(&instr.operands[1], buffer, data);
+        if (instr.operands[2].registertype == Q)
+          setLongWordInAddress(data->Outputs, instr.operands[2].address,
+                               temp64);
+        else if (instr.operands[2].registertype == M)
+          setLongWordInAddress(data->Memories, instr.operands[2].address,
+                               temp64);
+      }
+      // No float modulo
     }
     break;
   case InstGT:
