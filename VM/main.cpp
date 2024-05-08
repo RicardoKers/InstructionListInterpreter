@@ -501,6 +501,8 @@ int main() {
     operand[3] = {B, K, 0, 0};
     Kn[3]=3;
     operand[4] = {X, Q, 3, 0};
+    operand[5] = {W, M, 0, 6};
+        
     bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
     bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
     bufPos = encodeInstruction(program, bufPos, InstTON, operand, Kn);
@@ -516,6 +518,7 @@ int main() {
     operand[2] = {W, M, 0, 2};
     Kn[2]=4;
     operand[4] = {X, Q, 6, 0};
+    operand[5] = {W, M, 0, 6};
 
   //Load operation
     operand[3] = {X, I, 0, 0};
@@ -541,9 +544,7 @@ int main() {
   data.Inputs[2] = 0b00000000;
   
   #endif // End of Prati
-
-
-
+  
   // Run the program
   if(verifyProgramIntegrity(program) != noError) {
     printf("Program integrity error\n");

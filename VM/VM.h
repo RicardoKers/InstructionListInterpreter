@@ -84,10 +84,10 @@
 #define NumOpNE 2
 #define NumOpLT 2
 #define NumOpLE 2
-#define NumOpCTU 5
-#define NumOpCTD 5
-#define NumOpTON 5
-#define NumOpTOF 5
+#define NumOpCTU 6
+#define NumOpCTD 6
+#define NumOpTON 6
+#define NumOpTOF 6
 #define NumOpq 0
 #define NumOpTP 5 
 #define NumOpRTRIGGER 3 
@@ -137,6 +137,20 @@ typedef struct stInstruction {
   Operand operands[MaxOpers];
 } Instruction;
 
+// Union to convert data types: uint8, uint16, uint32, uint64, int8, int16, int32, int64
+typedef union {
+  uint8_t *u8;
+  uint16_t *u16;
+  uint32_t *u32;
+  uint64_t *u64;
+  int8_t *i8;
+  int16_t *i16;
+  int32_t *i32;
+  int64_t *i64;
+  float *f;
+} DataUnion;
+
+// Function prototypes
 uint8_t getNumOp(uint8_t inst);
 void initializeMemory(Data *data, Timer *atimers, Counter *acounters, Trigger *atriggers, Stack *astack);
 void executeInstruction(uint8_t *buffer, Instruction instr, Data *data);

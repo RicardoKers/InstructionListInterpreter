@@ -59,126 +59,55 @@ uint8_t readProgramFromFile(const char *filename, uint8_t *buffer) {
   fclose(file);
   return noError;
 }
+
 /**
  * Gets the number of operands for an instruction.
  *
  * @param inst The instruction to get the number of operands for. *
  */
 uint8_t getNumOp(uint8_t inst) {
-  switch (inst)
-  {
-  case InstLD:
-      return NumOpLD;
-    break;
-  case InstLDN:
-      return NumOpLDN;
-    break;
-  case InstST:
-      return NumOpST;
-    break;
-  case InstSTN:
-      return NumOpSTN;
-    break;
-  case InstS:
-      return NumOpS;
-    break;
-  case InstR:
-      return NumOpR;
-    break;
-  case InstMOV:
-      return NumOpMOV;
-    break;
-  case InstAND:
-      return NumOpAND;
-    break;
-  case InstANDp:
-      return NumOpANDp;
-    break;
-  case InstANDN:
-      return NumOpANDN;
-    break;
-  case InstANDNp:
-      return NumOpANDNp;
-    break;
-  case InstOR:
-      return NumOpOR;
-    break;
-  case InstORp:
-      return NumOpORp;
-    break;
-  case InstORN:
-      return NumOpORN;
-    break;
-  case InstORNp:
-      return NumOpORNp;
-    break;
-  case InstXOR:
-      return NumOpXOR;
-    break;
-  case InstXORp:
-      return NumOpXORp;
-    break;
-  case InstXORN:
-      return NumOpXORN;
-    break;
-  case InstXORNp:
-      return NumOpXORNp;
-    break;
-  case InstNOT:
-      return NumOpNOT;
-    break;
-  case InstADD:
-      return NumOpADD;
-    break;
-  case InstSUB:
-      return NumOpSUB;
-    break;
-  case InstMUL:
-      return NumOpMUL;
-    break;
-  case InstDIV:
-      return NumOpDIV;
-    break;
-  case InstMOD:
-      return NumOpMOD;
-    break;
-  case InstGT:
-      return NumOpGT;
-    break;
-  case InstGE:
-      return NumOpGE;
-    break;
-  case InstEQ:
-      return NumOpEQ;
-    break;
-  case InstNE:
-      return NumOpNE;
-    break;
-  case InstLT:
-      return NumOpLT;
-    break;
-  case InstLE:
-      return NumOpLE;
-    break;
-  case InstCTU:
-      return NumOpCTU;
-    break;
-  case InstCTD:
-      return NumOpCTD;
-    break;
-  case InstTON:
-      return NumOpTON;
-    break;
-  case InstTOF:
-      return NumOpTOF;
-    break;
-  case Instq:
-      return NumOpq;
-  default:
-      return 0;
-    break;
-  }
-  return 0;
+  uint8_t n[] = {
+    NumOpLD,
+    NumOpLDN,
+    NumOpST,
+    NumOpSTN,
+    NumOpS,
+    NumOpR,
+    NumOpMOV,
+    NumOpAND,
+    NumOpANDp,
+    NumOpANDN,
+    NumOpANDNp,
+    NumOpOR,
+    NumOpORp,
+    NumOpORN,
+    NumOpORNp,
+    NumOpXOR,
+    NumOpXORp,
+    NumOpXORN,
+    NumOpXORNp,
+    NumOpNOT,
+    NumOpADD,
+    NumOpSUB,
+    NumOpMUL,
+    NumOpDIV,
+    NumOpMOD,
+    NumOpGT,
+    NumOpGE,
+    NumOpEQ,
+    NumOpNE,
+    NumOpLT,
+    NumOpLE,
+    NumOpCTU,
+    NumOpCTD,
+    NumOpTON,
+    NumOpTOF,
+    NumOpTP,
+    NumOpRTRIGGER,
+    NumOpFTRIGGER,
+    NumOpq
+  };
+  return(n[inst]);
 }
 
 /**
@@ -190,20 +119,15 @@ uint8_t getNumOp(uint8_t inst) {
  */
 void getNextToken(uint32_t *pos, uint8_t *buffer, char *token) {
   uint8_t i = 0;
-  while (buffer[*pos] == ' ' || buffer[*pos] == '\n' || buffer[*pos] == '\t') {
-    (*pos)++;
-  }
-  
-  if(buffer[*pos] == '#') {
-    while (buffer[*pos] != '\n' && buffer[*pos] != '\0') {
-      (*pos)++;
+  while (buffer[*pos] == ' ' || buffer[*pos] == '\n' || buffer[*pos] == '\t' || buffer[*pos] == '#') {
+    if(buffer[*pos] == '#') {
+      while (buffer[*pos] != '\n' && buffer[*pos] != '\0') {
+        (*pos)++;
+      }
     }
-  }
-
-  while (buffer[*pos] == ' ' || buffer[*pos] == '\n' || buffer[*pos] == '\t') {
     (*pos)++;
   }
-  
+    
   while (buffer[*pos] != ' ' && buffer[*pos] != '\n' && buffer[*pos] != '\t' && buffer[*pos] != '\0') {
     token[i] = buffer[*pos];
     i++;
@@ -456,6 +380,110 @@ uint8_t verifyInstruction(Instruction *inst) {
   // TODO: implement more checks
 }
 
+/**
+ * Gets a Word from a memory address.
+ *
+ * @param memory The memory to get the byte from.
+ * @param address The address in the memory to get the byte from.
+ * @return The value of the byte.
+ */
+int16_t getWordFromAddress(uint8_t *memory, uint16_t address) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  return (u.i16[0]);
+}
+
+/**
+ * Sets a Word in a memory address.
+ *
+ * @param memory The memory to set the byte in.
+ * @param address The address in the memory to set the byte in.
+ * @param value The value to set the byte to.
+ */
+void setWordInAddress(uint8_t *memory, uint16_t address, int16_t value) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  u.i16[0] = value;
+}
+
+/**
+ * Gets a Double Word from a memory address.
+ *
+ * @param memory The memory to get the double word from.
+ * @param address The address in the memory to get the double word from.
+ * @return The value of the double word.
+ */
+int32_t getDoubleWordFromAddress(uint8_t *memory, uint16_t address) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  return (u.i32[0]);
+}
+
+/**
+ * Sets a Double Word in a memory address.
+ *
+ * @param memory The memory to set the double word in.
+ * @param address The address in the memory to set the double word in.
+ * @param value The value to set the double word to.
+ */
+void setDoubleWordInAddress(uint8_t *memory, uint16_t address, uint32_t value) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  u.i32[0] = value;
+}
+
+/**
+ * Gets a Long Word from a memory address.
+ *
+ * @param memory The memory to get the long word from.
+ * @param address The address in the memory to get the long word from.
+ * @return The value of the long word.
+ */
+int64_t getLongWordFromAddress(uint8_t *memory, uint16_t address) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  return (u.i64[0]);
+}
+
+/**
+ * Sets a Long Word in a memory address.
+ *
+ * @param memory The memory to set the long word in.
+ * @param address The address in the memory to set the long word in.
+ * @param value The value to set the long word to.
+ */
+void setLongWordInAddress(uint8_t *memory, uint16_t address, uint64_t value) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  u.i64[0] = value;
+}
+
+/**
+ * Gets a float from a memory address.
+ *
+ * @param memory The memory to get the float from.
+ * @param address The address in the memory to get the float from.
+ * @return The value of the float.
+ */
+float getFloatFromAddress(uint8_t *memory, uint16_t address) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  return (u.f[0]);
+}
+
+/**
+ * Sets a float in a memory address.
+ *
+ * @param memory The memory to set the float in.
+ * @param address The address in the memory to set the float in.
+ * @param value The value to set the float to.
+ */
+void setFloatInAddress(uint8_t *memory, uint16_t address, float value) {
+  DataUnion u;
+  u.u8 = (uint8_t *)(memory + address);
+  u.f[0] = value;
+}
+
 
 /**
  * Encodes an instruction into a buffer.
@@ -488,30 +516,16 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
         buffer[bufPos + 1] = (uint8_t)Kn[i] & 0xFF;
         bufPos += 2;
       } else if(operand[i].memorytype == W) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)Kn[i] & 0xFF;
+        setWordInAddress(buffer, bufPos + 1, (int16_t)Kn[i]);
         bufPos += 3;
       } else if(operand[i].memorytype == D) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 24) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 16) & 0xFF;
-        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 4] = (uint8_t)Kn[i] & 0xFF;
+        setDoubleWordInAddress(buffer, bufPos + 1, (uint32_t)Kn[i]);
         bufPos += 5;
       } else if(operand[i].memorytype == L) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 56) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 48) & 0xFF;
-        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 40) & 0xFF;
-        buffer[bufPos + 4] = (uint8_t)(Kn[i] >> 32) & 0xFF;
-        buffer[bufPos + 5] = (uint8_t)(Kn[i] >> 24) & 0xFF;
-        buffer[bufPos + 6] = (uint8_t)(Kn[i] >> 16) & 0xFF;
-        buffer[bufPos + 7] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 8] = (uint8_t)Kn[i] & 0xFF;
+        setLongWordInAddress(buffer, bufPos + 1, (uint64_t)Kn[i]);
         bufPos += 9;
       } else if(operand[i].memorytype == R) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 24) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 16) & 0xFF;
-        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 4] = (uint8_t)Kn[i] & 0xFF;
+        setDoubleWordInAddress(buffer, bufPos + 1, (uint32_t)Kn[i]);
         bufPos += 5;
       }
     }
@@ -678,8 +692,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("MW%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KW%d ", (int16_t)(program[instr.operands[i].address]
-                        <<8 | program[instr.operands[i].address+1]));
+        printf("KW%d ", getWordFromAddress(program, instr.operands[i].address));
     } else if (instr.operands[i].memorytype == D) {
       if (instr.operands[i].registertype == I)
         printf("ID%d ", instr.operands[i].address);
@@ -688,10 +701,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("MD%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%d ", (int32_t)(program[instr.operands[i].address]
-                        <<24 | program[instr.operands[i].address+1]<<16 |
-                        program[instr.operands[i].address+2]<<8 |
-                        program[instr.operands[i].address+3]));
+        printf("KD%d ", getDoubleWordFromAddress(program, instr.operands[i].address));
     } else if (instr.operands[i].memorytype == L) {
       if (instr.operands[i].registertype == I)
         printf("IL%d ", instr.operands[i].address);
@@ -700,14 +710,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("ML%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%ld ", (int64_t)((uint64_t)program[instr.operands[i].address]
-                        <<56 | (uint64_t)program[instr.operands[i].address+1]<<48 |
-                        (uint64_t)program[instr.operands[i].address+2]<<40 |
-                        (uint64_t)program[instr.operands[i].address+3]<<32 |
-                        program[instr.operands[i].address+4]<<24 |
-                        program[instr.operands[i].address+5]<<16 |
-                        program[instr.operands[i].address+6]<<8 |
-                        program[instr.operands[i].address+7]));
+        printf("KD%ld ", getLongWordFromAddress(program, instr.operands[i].address));
     }
     else if (instr.operands[i].memorytype == R) {
       if (instr.operands[i].registertype == I)
@@ -717,11 +720,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("MR%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K){
-        uint32_t temp = (program[instr.operands[i].address]
-                        <<24 | program[instr.operands[i].address+1]<<16 |
-                        program[instr.operands[i].address+2]<<8 |
-                        program[instr.operands[i].address+3]);
-        printf("KR%f ",*(float *)&temp);
+        printf("KR%f ",getFloatFromAddress(program, instr.operands[i].address));
       }        
     }
   }
@@ -735,30 +734,30 @@ void printInstruction(Instruction instr, uint8_t *program) {
  * @return The size of the program.
  */
 uint16_t getProgramSize(uint8_t *buffer) {
-  return (buffer[0] << 8) | buffer[1];
+  DataUnion u;
+  u.u8 = buffer;
+  return (u.u16[0]);
 }
 
 /**
- * Encodes the size of the program into a buffer.
- *
- * @param buffer The buffer to encode the size into.
- * @param size The size of the program.
+ * Verifies the integrity of the program.
+ * 
+ * @param buffer The buffer containing the program.
+ * @return The error code.
  */
 uint8_t verifyProgramIntegrity(uint8_t *buffer) {
-  uint32_t calculatedSize = 0;
-  uint32_t spectedSize;
-  uint16_t programSize = getProgramSize(buffer);
-  for (uint16_t i = 0; i < programSize; i++) {
-    calculatedSize += buffer[i];
-  }
-  spectedSize = (buffer[programSize] << 24) | (buffer[programSize + 1] << 16) |
-                (buffer[programSize + 2] << 8) | buffer[programSize + 3];
-  if(calculatedSize == spectedSize)
-    return noError;
-  else
-    return criticalError;
+	uint32_t calculatedSize = 0;
+	uint32_t spectedSize;
+	uint16_t programSize = getProgramSize(buffer);
+	for (uint16_t i = 0; i < programSize; i++) {
+		calculatedSize += buffer[i];
+	}
+	spectedSize = getDoubleWordFromAddress(buffer,programSize);
+	if(calculatedSize == spectedSize)
+	return noError;
+	else
+	return criticalError;
 }
-
 
 /**
  * Encodes the program checksum.
@@ -771,10 +770,9 @@ void encodeProgramCS(uint8_t *program) {
   for (uint16_t i = 0; i < size; i++) {
     sum += program[i];
   }
-  program[size] = (uint8_t)(sum >> 24) & 0xFF;
-  program[size + 1] = (uint8_t)(sum >> 16) & 0xFF;
-  program[size + 2] = (uint8_t)(sum >> 8) & 0xFF;
-  program[size + 3] = (uint8_t)sum & 0xFF;
+  DataUnion u;
+  u.u8 = (program + size);
+  u.u32[0] = sum;
 }
 
 /**
@@ -897,8 +895,9 @@ int main() {
   }
 
   // add final size to the output buffer
-  outBuffer[0] = (uint8_t)(outBufPos >> 8) & 0xFF;
-  outBuffer[1] = (uint8_t)outBufPos & 0xFF;
+  DataUnion u;
+  u.u8 = outBuffer;
+  u.u16[0] = outBufPos;
 
   // encode the checksum of the program
   encodeProgramCS(outBuffer);
