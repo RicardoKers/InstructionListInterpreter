@@ -394,6 +394,8 @@ void readInputsfromFile(Data *data, const char *filename) {
 }
 
 int main() {
+  // debug data + timers + counters + triggers in bytes
+  uint8_t debugData[sizeof(Data) + MAX_TIMERS * sizeof(Timer) + MAX_COUNTERS * sizeof(Counter) + MAX_TRIGGERS * sizeof(Trigger) + sizeof(Stack)];
   // Stack initalization
   Stack stack;
   initStack(&stack);
@@ -405,6 +407,7 @@ int main() {
   // counter initialization
   Counter counters[MAX_COUNTERS];
   initializeCounter(counters, sizeof(counters)/ sizeof(*counters));
+
   // trigger initialization
   Trigger triggers[MAX_TRIGGERS];
   initializeTrigger(triggers, sizeof(triggers)/ sizeof(*triggers));
@@ -568,7 +571,7 @@ int main() {
       Instruction instr = readInstruction(program, &bufPos);
       printInstruction(instr, program);
       executeInstruction(program, instr, &data);
-      printMemory(&data);      
+      printMemory(&data);
       }
     printf("Press 'q <enter>' to quit, or '<enter>' to continue\n");
     printf("######################################################################\n");

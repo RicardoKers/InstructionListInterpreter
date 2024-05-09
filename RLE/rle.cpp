@@ -23,7 +23,6 @@ size_t encodeRLE(uint8_t *dataIn, uint8_t *dataOut, size_t size) {
   return j;    
 }
 
-
 /** Function to decode data with RLE
  *  @param dataIn: pointer to input data
  *  @param dataOut: pointer to output data
