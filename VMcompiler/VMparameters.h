@@ -8,4 +8,5 @@
 // Output definition
 #define OutputSize 10 // Number of outputs in bytes
 
+
 #endif // VMPARAMETERS_H_INCLUDED

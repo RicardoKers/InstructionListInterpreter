@@ -156,6 +156,7 @@ const char *InstNames[] = {
 // Isntruction definition
 #define MaxOpers 6
 
+
 // Data structure
 typedef struct stData {
   // Memory variables

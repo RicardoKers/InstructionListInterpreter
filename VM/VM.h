@@ -166,5 +166,4 @@ int16_t getWordFromAddress(uint8_t *memory, uint16_t address);
 int32_t getDoubleWordFromAddress(uint8_t *memory, uint16_t address);
 int64_t getLongWordFromAddress(uint8_t *memory, uint16_t address);
 float getFloatFromAddress(uint8_t *memory, uint16_t address);
-
 #endif
