@@ -1,7 +1,5 @@
 # operações de entrada e saída com Bits
-# LD IX0.0 
-# ST QX0.0
-# STN QX0.1
+LD IX0.0 
 
 # LDN IX0.1
 # S QX0.2
@@ -57,7 +55,7 @@
 # LD KX1
 # MOD KW10 IW0 QW0
 
-LD KX1
-# CTU(ncouter, CO, PV, RST, OUT, CV);
-CTU KB3 IX0.0 KW4 IX0.1 MX1.0 MW0
-MOV MW0 QW0 
+# Testando Contador
+# LD KX1
+# CTU KB3 IX0.0 KW4 IX0.1 MX2.0 MW0 # CTU(ncouter, CO, PV, RST, OUT, CV);
+# MOV MW0 QW0 

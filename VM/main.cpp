@@ -28,8 +28,7 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
     buffer[bufPos] = operand[i].memorytype << 5 | operand[i].registertype << 3 |
                      operand[i].bitNumber;
     if(operand[i].registertype != K) {
-      buffer[bufPos + 1] = (uint8_t)(operand[i].address >> 8) & 0xFF;
-      buffer[bufPos + 2] = (uint8_t)operand[i].address & 0xFF;
+      setWordInAddress(buffer, bufPos + 1, operand[i].address);
       bufPos += 3;
     } else {
       if(operand[i].memorytype == X) {
@@ -39,35 +38,21 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
         buffer[bufPos + 1] = (uint8_t)Kn[i] & 0xFF;
         bufPos += 2;
       } else if(operand[i].memorytype == W) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)Kn[i] & 0xFF;
+        setWordInAddress(buffer, bufPos + 1, (int16_t)Kn[i]);
         bufPos += 3;
       } else if(operand[i].memorytype == D) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 24) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 16) & 0xFF;
-        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 4] = (uint8_t)Kn[i] & 0xFF;
+        setDoubleWordInAddress(buffer, bufPos + 1, (uint32_t)Kn[i]);
         bufPos += 5;
       } else if(operand[i].memorytype == L) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 56) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 48) & 0xFF;
-        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 40) & 0xFF;
-        buffer[bufPos + 4] = (uint8_t)(Kn[i] >> 32) & 0xFF;
-        buffer[bufPos + 5] = (uint8_t)(Kn[i] >> 24) & 0xFF;
-        buffer[bufPos + 6] = (uint8_t)(Kn[i] >> 16) & 0xFF;
-        buffer[bufPos + 7] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 8] = (uint8_t)Kn[i] & 0xFF;
+        setLongWordInAddress(buffer, bufPos + 1, (uint64_t)Kn[i]);
         bufPos += 9;
       } else if(operand[i].memorytype == R) {
-        buffer[bufPos + 1] = (uint8_t)(Kn[i] >> 24) & 0xFF;
-        buffer[bufPos + 2] = (uint8_t)(Kn[i] >> 16) & 0xFF;
-        buffer[bufPos + 3] = (uint8_t)(Kn[i] >> 8) & 0xFF;
-        buffer[bufPos + 4] = (uint8_t)Kn[i] & 0xFF;
+        setDoubleWordInAddress(buffer, bufPos + 1, (uint32_t)Kn[i]);
         bufPos += 5;
       }
     }
   }
-
+  
   buffer[bufPos] = 0;
   return bufPos;
 }
@@ -123,123 +108,45 @@ uint8_t readProgramFromFile(const char *filename, uint8_t *buffer) {
  */
 void printInstruction(Instruction instr, uint8_t *program) {
   switch (instr.opcode) {
-  case InstLD:
-    printf("LD ");
-    break;
-  case InstLDN:
-    printf("LDN ");
-    break;
-  case InstST:
-    printf("ST ");
-    break;
-  case InstSTN:
-    printf("STN ");
-    break;
-  case InstS:
-    printf("S ");
-    break;
-  case InstR:
-    printf("R ");
-    break;
-  case InstMOV:
-    printf("MOV ");
-    break;
-  case InstAND:
-    printf("AND ");
-    break;
-  case InstANDp:
-    printf("AND( ");
-    break;
-  case InstANDN:
-    printf("ANDN ");
-    break;
-  case InstANDNp:
-    printf("ANDN( ");
-    break;
-  case InstOR:
-    printf("OR ");
-    break;
-  case InstORp:
-    printf("OR( ");
-    break;
-  case InstORN:
-    printf("ORN ");
-    break;
-  case InstORNp:
-    printf("ORN( ");
-    break;
-  case InstXOR:
-    printf("XOR ");
-    break;
-  case InstXORp:
-    printf("XOR( ");
-    break;
-  case InstXORN:
-    printf("XORN ");
-    break;
-  case InstXORNp:
-    printf("XORN( ");
-    break;
-  case InstNOT:
-    printf("NOT ");
-    break;
-  case InstADD:
-    printf("ADD ");
-    break;
-  case InstSUB:
-    printf("SUB ");
-    break;
-  case InstMUL:
-    printf("MUL ");
-    break;
-  case InstDIV:
-    printf("DIV ");
-    break;
-  case InstMOD:
-    printf("MOD ");
-    break;
-  case InstGT:
-    printf("GT ");
-    break;
-  case InstGE:
-    printf("GE ");
-    break;
-  case InstEQ:
-    printf("EQ ");
-    break;
-  case InstNE:
-    printf("NE ");
-    break;
-  case InstLT:
-    printf("LT ");
-    break;
-  case InstLE:
-    printf("LE ");
-    break;
-  case InstCTU:
-    printf("CTU ");
-    break;
-  case InstCTD:
-    printf("CTD ");
-    break;
-  case InstTON:
-    printf("TON ");
-    break;
-  case InstTOF:
-    printf("TOF ");
-    break;
-  case InstTP:
-    printf("TP ");
-  break;
-  case InstRTRIGGER:
-    printf("RTRIGGER ");
-  break;
-  case InstFTRIGGER:
-    printf("FTRIGGER ");
-    break;
-  case Instq:
-    printf(") ");
-    break;
+  case InstLD: printf("LD "); break;
+  case InstLDN: printf("LDN "); break;
+  case InstST: printf("ST "); break;
+  case InstSTN: printf("STN "); break;
+  case InstS: printf("S "); break;
+  case InstR: printf("R "); break;
+  case InstMOV: printf("MOV "); break;
+  case InstAND: printf("AND "); break;
+  case InstANDp: printf("AND( "); break;
+  case InstANDN: printf("ANDN "); break;
+  case InstANDNp: printf("ANDN( "); break;
+  case InstOR: printf("OR "); break;
+  case InstORp: printf("OR( "); break;
+  case InstORN: printf("ORN "); break;
+  case InstORNp: printf("ORN( "); break;
+  case InstXOR: printf("XOR "); break;
+  case InstXORp: printf("XOR( "); break;
+  case InstXORN: printf("XORN "); break;
+  case InstXORNp: printf("XORN( "); break;
+  case InstNOT: printf("NOT "); break;
+  case InstADD: printf("ADD "); break;
+  case InstSUB: printf("SUB "); break;
+  case InstMUL: printf("MUL "); break;
+  case InstDIV: printf("DIV "); break;
+  case InstMOD: printf("MOD "); break;
+  case InstGT: printf("GT "); break;
+  case InstGE: printf("GE "); break;
+  case InstEQ: printf("EQ "); break;
+  case InstNE: printf("NE "); break;
+  case InstLT: printf("LT "); break;
+  case InstLE: printf("LE "); break;
+  case InstCTU: printf("CTU "); break;
+  case InstCTD: printf("CTD "); break;
+  case InstTON: printf("TON "); break;
+  case InstTOF: printf("TOF "); break;
+  case InstTP: printf("TP "); break;
+  case InstRTRIGGER: printf("RTRIGGER "); break;
+  case InstFTRIGGER: printf("FTRIGGER "); break;
+  case Instq: printf(") "); break;
   default:
     break;
   }
@@ -273,8 +180,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("MW%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KW%d ", (int16_t)(program[instr.operands[i].address]
-                        <<8 | program[instr.operands[i].address+1]));
+        printf("KW%d ", getWordFromAddress(program, instr.operands[i].address));
     } else if (instr.operands[i].memorytype == D) {
       if (instr.operands[i].registertype == I)
         printf("ID%d ", instr.operands[i].address);
@@ -283,10 +189,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("MD%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%d ", (int32_t)(program[instr.operands[i].address]
-                        <<24 | program[instr.operands[i].address+1]<<16 |
-                        program[instr.operands[i].address+2]<<8 |
-                        program[instr.operands[i].address+3]));
+        printf("KD%d ", getDoubleWordFromAddress(program, instr.operands[i].address));
     } else if (instr.operands[i].memorytype == L) {
       if (instr.operands[i].registertype == I)
         printf("IL%d ", instr.operands[i].address);
@@ -295,14 +198,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("ML%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K)
-        printf("KD%lld ", (int64_t)((uint64_t)program[instr.operands[i].address]
-                        <<56 | (uint64_t)program[instr.operands[i].address+1]<<48 |
-                        (uint64_t)program[instr.operands[i].address+2]<<40 |
-                        (uint64_t)program[instr.operands[i].address+3]<<32 |
-                        program[instr.operands[i].address+4]<<24 |
-                        program[instr.operands[i].address+5]<<16 |
-                        program[instr.operands[i].address+6]<<8 |
-                        program[instr.operands[i].address+7]));
+        printf("KD%ld ", getLongWordFromAddress(program, instr.operands[i].address));
     }
     else if (instr.operands[i].memorytype == R) {
       if (instr.operands[i].registertype == I)
@@ -312,11 +208,7 @@ void printInstruction(Instruction instr, uint8_t *program) {
       else if (instr.operands[i].registertype == M)
         printf("MR%d ", instr.operands[i].address);
       else if (instr.operands[i].registertype == K){
-        uint32_t temp = (program[instr.operands[i].address]
-                        <<24 | program[instr.operands[i].address+1]<<16 |
-                        program[instr.operands[i].address+2]<<8 |
-                        program[instr.operands[i].address+3]);
-        printf("KR%f ",*(float *)&temp);
+        printf("KR%f ",getFloatFromAddress(program, instr.operands[i].address));
       }        
     }
   }

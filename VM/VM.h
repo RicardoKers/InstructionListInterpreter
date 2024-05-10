@@ -159,5 +159,12 @@ uint16_t getProgramSize(uint8_t *buffer);
 uint8_t verifyProgramIntegrity(uint8_t *buffer);
 int8_t operandValueToInt8(Operand *oper, uint8_t *program, Data *data);
 int16_t operandValueToInt16(Operand *oper, uint8_t *program, Data *data);
+void setWordInAddress(uint8_t *memory, uint16_t address, int16_t value);
+void setDoubleWordInAddress(uint8_t *memory, uint16_t address, uint32_t value);
+void setLongWordInAddress(uint8_t *memory, uint16_t address, uint64_t value);
+int16_t getWordFromAddress(uint8_t *memory, uint16_t address);
+int32_t getDoubleWordFromAddress(uint8_t *memory, uint16_t address);
+int64_t getLongWordFromAddress(uint8_t *memory, uint16_t address);
+float getFloatFromAddress(uint8_t *memory, uint16_t address);
 
 #endif

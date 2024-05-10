@@ -110,91 +110,16 @@ Trigger *triggers;
  */
 uint8_t getNumOp(uint8_t inst) {
   uint8_t n[] = {
-    NumOpLD,
-    NumOpLDN,
-    NumOpST,
-    NumOpSTN,
-    NumOpS,
-    NumOpR,
-    NumOpMOV,
-    NumOpAND,
-    NumOpANDp,
-    NumOpANDN,
-    NumOpANDNp,
-    NumOpOR,
-    NumOpORp,
-    NumOpORN,
-    NumOpORNp,
-    NumOpXOR,
-    NumOpXORp,
-    NumOpXORN,
-    NumOpXORNp,
-    NumOpNOT,
-    NumOpADD,
-    NumOpSUB,
-    NumOpMUL,
-    NumOpDIV,
-    NumOpMOD,
-    NumOpGT,
-    NumOpGE,
-    NumOpEQ,
-    NumOpNE,
-    NumOpLT,
-    NumOpLE,
-    NumOpCTU,
-    NumOpCTD,
-    NumOpTON,
-    NumOpTOF,
-    NumOpTP,
-    NumOpRTRIGGER,
-    NumOpFTRIGGER,
-    NumOpq
+    NumOpLD, NumOpLDN, NumOpST, NumOpSTN, NumOpS,
+    NumOpR, NumOpMOV, NumOpAND, NumOpANDp, NumOpANDN,
+    NumOpANDNp, NumOpOR, NumOpORp, NumOpORN, NumOpORNp,
+    NumOpXOR, NumOpXORp, NumOpXORN, NumOpXORNp, NumOpNOT,
+    NumOpADD, NumOpSUB, NumOpMUL, NumOpDIV, NumOpMOD,
+    NumOpGT, NumOpGE, NumOpEQ, NumOpNE, NumOpLT,
+    NumOpLE, NumOpCTU, NumOpCTD, NumOpTON, NumOpTOF,
+    NumOpTP, NumOpRTRIGGER, NumOpFTRIGGER, NumOpq
   };
   return(n[inst]);
-}
-
-/**
- * Reads an instruction from a buffer at a given position.
- *
- * @param buffer The buffer containing the instructions.
- * @param pos The position in the buffer to read the instruction from.
- * @return The instruction read from the buffer.
- */
-Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
-  Instruction instr;
-  uint16_t pos = (*position);
-  instr.opcode = buffer[pos];
-  instr.num_operands = getNumOp(instr.opcode);
-  pos++;
-  for (uint16_t i = 0; i < instr.num_operands; i++) {
-    instr.operands[i].memorytype = buffer[pos] >> 5;
-    instr.operands[i].registertype = (buffer[pos] >> 3) & 0x03;
-    instr.operands[i].bitNumber = buffer[pos] & 0x07;
-    pos++;
-    if(instr.operands[i].registertype != K)
-    {
-      instr.operands[i].address = (buffer[pos] << 8) | buffer[pos + 1];
-      pos += 2;
-    }
-    else
-    {
-      instr.operands[i].address = pos;
-      if(instr.operands[i].memorytype == X)
-        pos += 1;
-      if(instr.operands[i].memorytype == B)
-        pos += 1;
-      if(instr.operands[i].memorytype == W)
-        pos += 2;
-      if(instr.operands[i].memorytype == D)
-        pos += 4;
-      if(instr.operands[i].memorytype == L)
-        pos += 8;
-      if(instr.operands[i].memorytype == R)
-        pos += 4;
-    }
-  }
-  *position = pos;
-  return instr;
 }
 
 /**
@@ -509,6 +434,50 @@ float operandValueToFloat(Operand *oper, uint8_t *program, Data *data)
     buffer = data->Outputs;
   }
   return getFloatFromAddress(buffer, oper->address);
+}
+
+/**
+ * Reads an instruction from a buffer at a given position.
+ *
+ * @param buffer The buffer containing the instructions.
+ * @param pos The position in the buffer to read the instruction from.
+ * @return The instruction read from the buffer.
+ */
+Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
+  Instruction instr;
+  uint16_t pos = (*position);
+  instr.opcode = buffer[pos];
+  instr.num_operands = getNumOp(instr.opcode);
+  pos++;
+  for (uint16_t i = 0; i < instr.num_operands; i++) {
+    instr.operands[i].memorytype = buffer[pos] >> 5;
+    instr.operands[i].registertype = (buffer[pos] >> 3) & 0x03;
+    instr.operands[i].bitNumber = buffer[pos] & 0x07;
+    pos++;
+    if(instr.operands[i].registertype != K)
+    {
+      instr.operands[i].address = getWordFromAddress(buffer, pos);
+      pos += 2;
+    }
+    else
+    {
+      instr.operands[i].address = pos;
+      if(instr.operands[i].memorytype == X)
+        pos += 1;
+      else if(instr.operands[i].memorytype == B)
+        pos += 1;
+      else if(instr.operands[i].memorytype == W)
+        pos += 2;
+      else if(instr.operands[i].memorytype == D)
+        pos += 4;
+      else if(instr.operands[i].memorytype == L)
+        pos += 8;
+      else if(instr.operands[i].memorytype == R)
+        pos += 4;
+    }
+  }
+  *position = pos;
+  return instr;
 }
 
 /**

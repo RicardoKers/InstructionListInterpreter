@@ -67,45 +67,14 @@ uint8_t readProgramFromFile(const char *filename, uint8_t *buffer) {
  */
 uint8_t getNumOp(uint8_t inst) {
   uint8_t n[] = {
-    NumOpLD,
-    NumOpLDN,
-    NumOpST,
-    NumOpSTN,
-    NumOpS,
-    NumOpR,
-    NumOpMOV,
-    NumOpAND,
-    NumOpANDp,
-    NumOpANDN,
-    NumOpANDNp,
-    NumOpOR,
-    NumOpORp,
-    NumOpORN,
-    NumOpORNp,
-    NumOpXOR,
-    NumOpXORp,
-    NumOpXORN,
-    NumOpXORNp,
-    NumOpNOT,
-    NumOpADD,
-    NumOpSUB,
-    NumOpMUL,
-    NumOpDIV,
-    NumOpMOD,
-    NumOpGT,
-    NumOpGE,
-    NumOpEQ,
-    NumOpNE,
-    NumOpLT,
-    NumOpLE,
-    NumOpCTU,
-    NumOpCTD,
-    NumOpTON,
-    NumOpTOF,
-    NumOpTP,
-    NumOpRTRIGGER,
-    NumOpFTRIGGER,
-    NumOpq
+    NumOpLD, NumOpLDN, NumOpST, NumOpSTN, NumOpS,
+    NumOpR, NumOpMOV, NumOpAND, NumOpANDp, NumOpANDN,
+    NumOpANDNp, NumOpOR, NumOpORp, NumOpORN, NumOpORNp,
+    NumOpXOR, NumOpXORp, NumOpXORN, NumOpXORNp, NumOpNOT,
+    NumOpADD, NumOpSUB, NumOpMUL, NumOpDIV, NumOpMOD,
+    NumOpGT, NumOpGE, NumOpEQ, NumOpNE, NumOpLT,
+    NumOpLE, NumOpCTU, NumOpCTD, NumOpTON, NumOpTOF,
+    NumOpTP, NumOpRTRIGGER, NumOpFTRIGGER, NumOpq
   };
   return(n[inst]);
 }
@@ -505,8 +474,7 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
     buffer[bufPos] = operand[i].memorytype << 5 | operand[i].registertype << 3 |
                      operand[i].bitNumber;
     if(operand[i].registertype != K) {
-      buffer[bufPos + 1] = (uint8_t)(operand[i].address >> 8) & 0xFF;
-      buffer[bufPos + 2] = (uint8_t)operand[i].address & 0xFF;
+      setWordInAddress(buffer, bufPos + 1, operand[i].address);
       bufPos += 3;
     } else {
       if(operand[i].memorytype == X) {
@@ -542,123 +510,45 @@ uint16_t encodeInstruction(uint8_t *buffer, uint16_t bufPos, uint8_t opperation,
  */
 void printInstruction(Instruction instr, uint8_t *program) {
   switch (instr.opcode) {
-  case InstLD:
-    printf("LD ");
-    break;
-  case InstLDN:
-    printf("LDN ");
-    break;
-  case InstST:
-    printf("ST ");
-    break;
-  case InstSTN:
-    printf("STN ");
-    break;
-  case InstS:
-    printf("S ");
-    break;
-  case InstR:
-    printf("R ");
-    break;
-  case InstMOV:
-    printf("MOV ");
-    break;
-  case InstAND:
-    printf("AND ");
-    break;
-  case InstANDp:
-    printf("AND( ");
-    break;
-  case InstANDN:
-    printf("ANDN ");
-    break;
-  case InstANDNp:
-    printf("ANDN( ");
-    break;
-  case InstOR:
-    printf("OR ");
-    break;
-  case InstORp:
-    printf("OR( ");
-    break;
-  case InstORN:
-    printf("ORN ");
-    break;
-  case InstORNp:
-    printf("ORN( ");
-    break;
-  case InstXOR:
-    printf("XOR ");
-    break;
-  case InstXORp:
-    printf("XOR( ");
-    break;
-  case InstXORN:
-    printf("XORN ");
-    break;
-  case InstXORNp:
-    printf("XORN( ");
-    break;
-  case InstNOT:
-    printf("NOT ");
-    break;
-  case InstADD:
-    printf("ADD ");
-    break;
-  case InstSUB:
-    printf("SUB ");
-    break;
-  case InstMUL:
-    printf("MUL ");
-    break;
-  case InstDIV:
-    printf("DIV ");
-    break;
-  case InstMOD:
-    printf("MOD ");
-    break;
-  case InstGT:
-    printf("GT ");
-    break;
-  case InstGE:
-    printf("GE ");
-    break;
-  case InstEQ:
-    printf("EQ ");
-    break;
-  case InstNE:
-    printf("NE ");
-    break;
-  case InstLT:
-    printf("LT ");
-    break;
-  case InstLE:
-    printf("LE ");
-    break;
-  case InstCTU:
-    printf("CTU ");
-    break;
-  case InstCTD:
-    printf("CTD ");
-    break;
-  case InstTON:
-    printf("TON ");
-    break;
-  case InstTOF:
-    printf("TOF ");
-    break;
-  case InstTP:
-    printf("TP ");
-  break;
-  case InstRTRIGGER:
-    printf("RTRIGGER ");
-  break;
-  case InstFTRIGGER:
-    printf("FTRIGGER ");
-    break;
-  case Instq:
-    printf(") ");
-    break;
+  case InstLD: printf("LD "); break;
+  case InstLDN: printf("LDN "); break;
+  case InstST: printf("ST "); break;
+  case InstSTN: printf("STN "); break;
+  case InstS: printf("S "); break;
+  case InstR: printf("R "); break;
+  case InstMOV: printf("MOV "); break;
+  case InstAND: printf("AND "); break;
+  case InstANDp: printf("AND( "); break;
+  case InstANDN: printf("ANDN "); break;
+  case InstANDNp: printf("ANDN( "); break;
+  case InstOR: printf("OR "); break;
+  case InstORp: printf("OR( "); break;
+  case InstORN: printf("ORN "); break;
+  case InstORNp: printf("ORN( "); break;
+  case InstXOR: printf("XOR "); break;
+  case InstXORp: printf("XOR( "); break;
+  case InstXORN: printf("XORN "); break;
+  case InstXORNp: printf("XORN( "); break;
+  case InstNOT: printf("NOT "); break;
+  case InstADD: printf("ADD "); break;
+  case InstSUB: printf("SUB "); break;
+  case InstMUL: printf("MUL "); break;
+  case InstDIV: printf("DIV "); break;
+  case InstMOD: printf("MOD "); break;
+  case InstGT: printf("GT "); break;
+  case InstGE: printf("GE "); break;
+  case InstEQ: printf("EQ "); break;
+  case InstNE: printf("NE "); break;
+  case InstLT: printf("LT "); break;
+  case InstLE: printf("LE "); break;
+  case InstCTU: printf("CTU "); break;
+  case InstCTD: printf("CTD "); break;
+  case InstTON: printf("TON "); break;
+  case InstTOF: printf("TOF "); break;
+  case InstTP: printf("TP "); break;
+  case InstRTRIGGER: printf("RTRIGGER "); break;
+  case InstFTRIGGER: printf("FTRIGGER "); break;
+  case Instq: printf(") "); break;
   default:
     break;
   }
@@ -811,7 +701,7 @@ Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
     pos++;
     if(instr.operands[i].registertype != K)
     {
-      instr.operands[i].address = (buffer[pos] << 8) | buffer[pos + 1];
+      instr.operands[i].address = getWordFromAddress(buffer, pos);
       pos += 2;
     }
     else
@@ -819,15 +709,15 @@ Instruction readInstruction(uint8_t *buffer, uint16_t *position) {
       instr.operands[i].address = pos;
       if(instr.operands[i].memorytype == X)
         pos += 1;
-      if(instr.operands[i].memorytype == B)
+      else if(instr.operands[i].memorytype == B)
         pos += 1;
-      if(instr.operands[i].memorytype == W)
+      else if(instr.operands[i].memorytype == W)
         pos += 2;
-      if(instr.operands[i].memorytype == D)
+      else if(instr.operands[i].memorytype == D)
         pos += 4;
-      if(instr.operands[i].memorytype == L)
+      else if(instr.operands[i].memorytype == L)
         pos += 8;
-      if(instr.operands[i].memorytype == R)
+      else if(instr.operands[i].memorytype == R)
         pos += 4;
     }
   }
@@ -868,14 +758,20 @@ int main() {
   Instruction testInstr;
   uint64_t Kn[10];
   printf("\nCompiling: %s\n\n", filename);
-  while (program[bufPos] != '\0')
-  {
+  while (program[bufPos] != '\0') {
     while(program[bufPos] == ' ' || program[bufPos+1] == '\t' || program[bufPos] == '\n') {
       bufPos++;      
     }
     
     if(program[bufPos] == '\0') break;
 
+    if(program[bufPos] == '#') {
+      while(program[bufPos] != '\n') {
+        bufPos++;
+      }
+      continue;
+    }
+    
     // get the instruction from the buffer
     if(getInstruction(&instr, &bufPos, program, Kn) != noError) {
       return 0;
